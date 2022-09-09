@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer base {
+     :root {
+        --bg-primary: 255, 255, 255;
+        --bg-secondary: 245, 246, 247;
+        --bg-tertiary: 238, 238, 238;
+        --text-primary: 0, 0, 0;
+        --text-secondary: 56, 63, 74;
+        --text-tertiary: 255, 255, 255;
+    }
+    .dark {
+        /*
+    * update all colors:
+    * --bg-primary: ...
+    */
+        --bg-primary: 255, 0, 0;
+        --bg-secondary: 0, 0, 255;
+        --bg-tertiary: 0, 255, 0;
+        --text-primary: 0, 0, 0;
+        --text-secondary: 56, 63, 74;
+        --text-tertiary: 255, 255, 255;
+    }
+    .coffee {
+        /*
+    * update all colors:
+    * --bg-primary: ...
+    */
+        --bg-primary: 0, 255, 0;
+        --bg-secondary: 255, 0, 0;
+        --bg-tertiary: 0, 0, 255;
+        --text-primary: 0, 0, 0;
+        --text-secondary: 56, 63, 74;
+        --text-tertiary: 255, 255, 255;
+    }
+}
