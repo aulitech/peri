@@ -18,7 +18,7 @@ const config = {
         }),
         paths: {
             // change below to your repo name
-            base: dev ? "" : "/docs",
+            base: dev ? "" : "/tw-theme/docs",
         }
     }
 };
