@@ -20,51 +20,49 @@
 	<title>Flipbook</title>
 </svelte:head>
 
-<header class="w-full h-12 bg-primary font-bold text-2xl text-center text-primary">
-	AuLi.Tech Flipbook
-</header>
+<header class="w-full h-12 bg-primary text-primary font-bold text-2xl text-center">Flipbook</header>
 
-<div
-	class="flex flex-row flex-wrap cursor-cell justify-start p-4 gap-4 border-gray-200 snap-y snap-mandatory h-85vh "
->
-	{#each Object.entries(filteredTabs).sort() as [tab, cardList]}
-		<details class="bg-secondary p-2 rounded-md open:snap-start flex flex-col open:bg-tertiary">
-			<summary class="w-80 p-2 border-gray-300 font-bold text-2xl text-center">{tab}</summary>
+<div class="flex flex-row bg-secondary flex-wrap justify-center h-85vh ">
+	<div class="flex flex-row  flex-wrap cursor-cell justify-start p-4 gap-4">
+		{#each Object.entries(filteredTabs).sort() as [tab, cardList]}
+			<details class="bg-secondary p-2 rounded-md open:snap-start flex flex-col open:bg-tertiary">
+				<summary class="w-80 p-2 font-bold text-2xl text-left text-tertiary open:text-primary"
+					>{tab}</summary
+				>
 
-			<ul class="text-base font-normal flex flex-row flex-wrap justify-left gap-x-8 gap-y-2">
-				{#each cardList.sort() as card}
-					<li><FBCard FBCard={card} /></li>
-				{/each}
-			</ul>
-		</details>
-	{/each}
+				<ul class="text-base font-normal flex flex-row flex-wrap justify-left gap-x-8 gap-y-2">
+					{#each cardList.sort() as card}
+						<li><FBCard FBCard={card} /></li>
+					{/each}
+				</ul>
+			</details>
+		{/each}
 
-	<Newphrase Newphrase={''} />
+		<Newphrase Newphrase={''} />
+	</div>
 </div>
 
-<footer
-	class="w-full h-16 bg-secondary border-t-2 border-white fixed left-0 bottom-0 text-secondary text-2xl "
->
-	<div class="w-full p-4 flex justify-center justify-evenly items-center">
+<footer class="w-full h-16 bg-primary fixed left-0 bottom-0 text-primary text-2xl ">
+	<div class="w-full p-4 flex justify-evenly items-center">
 		<button
 			type="button"
-			class="inline-block px-6 py-2.5 font-medium text-xs leading-tight upper Dollarcase rounded-full shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out"
+			class="p-2 font-bold text-md uppercase rounded-full shadow-md hover:bg-tertiary hover:shadow-lg transition duration-150 ease-in-out"
 			>Bathroom</button
 		>
 		<button
 			type="button"
-			class="inline-block px-6 py-2.5  font-medium text-xs leading-tight uppercase rounded-full shadow-md hover:bg-purple-700 hover:shadow-lg focus:bg-purple-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-purple-800 active:shadow-lg transition duration-150 ease-in-out"
+			class="p-2 font-bold text-md uppercase rounded-full shadow-md hover:bg-tertiary hover:shadow-lg transition duration-150 ease-in-out"
 			>Food</button
 		>
 		<button
 			type="button"
-			class="inline-block px-6 py-2.5 font-medium text-xs leading-tight uppercase rounded-full shadow-md hover:bg-green-600 hover:shadow-lg focus:bg-green-600 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-green-700 active:shadow-lg transition duration-150 ease-in-out"
+			class="p-2 font-bold text-md uppercase rounded-full shadow-md hover:bg-tertiary hover:shadow-lg transition duration-150 ease-in-out"
 			>Pain</button
 		>
 		<button
 			type="button"
-			class="inline-block px-6 py-2.5 bg-red-600 text-white font-medium text-xs leading-tight uppercase rounded-full shadow-md hover:bg-red-700 hover:shadow-lg focus:bg-red-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-red-800 active:shadow-lg transition duration-150 ease-in-out"
-			>Help!</button
+			class="p-2 font-bold text-md uppercase rounded-full shadow-md hover:bg-tertiary hover:shadow-lg transition duration-150 ease-in-out"
+			>Help</button
 		>
 	</div>
 </footer>

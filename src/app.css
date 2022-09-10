@@ -22,16 +22,16 @@
         --text-secondary: 56, 63, 74;
         --text-tertiary: 255, 255, 255;
     }
-    .coffee {
+    .auli-pallette {
         /*
     * update all colors:
     * --bg-primary: ...
     */
-        --bg-primary: 0, 255, 0;
-        --bg-secondary: 255, 0, 0;
-        --bg-tertiary: 0, 0, 255;
-        --text-primary: 0, 0, 0;
-        --text-secondary: 56, 63, 74;
+        --bg-primary: 84, 84, 84;
+        --bg-secondary: 42, 42, 42;
+        --bg-tertiary: 126, 126, 126;
+        --text-primary: 254, 221, 104;
+        --text-secondary: 0, 0, 0;
         --text-tertiary: 255, 255, 255;
     }
 }

@@ -3,12 +3,8 @@
 	export let Newphrase;
 </script>
 
-<div class="bg-gray-100 p-2 border border-gray-300 flex flex-col align-middle">
-	<div class="w-80 p-2 border-gray-300 font-bold text-xl align-middle justify-center text-left">
-		New Phrase
-	</div>
-
-	<ul class="bg-white border border-gray-300 text-base font-normal ">
+<div class="p-2 flex flex-col">
+	<ul class="w-80 p-2 text-md font-normal text-primary">
 		<li class="flex flex-row flex-wrap align-center">
 			<div
 				on:mouseenter={() =>
@@ -18,17 +14,17 @@
 						1000
 					)}
 				on:mouseleave={() => clearTimeout(speakTimer)}
-				class="w-[10%]"
+				class="w-[10%] border-none bg-tertiary"
 			/>
-			<div class="w-4/5">
+			<div class="w-4/5 bg-tertiary">
 				<label for="txt" />
 				<!-- svelte-ignore a11y-autofocus -->
 				<textArea
 					id="txt"
 					name="txt"
-					class="w-full border-none"
+					class="w-full text-xl  border-none bg-tertiary"
 					autofocus
-					placeholder="Type a new phrase"
+					placeholder="Type a phrase"
 					on:mouseleave={() => (Newphrase = document.getElementById('txt').value)}
 				/>
 			</div>
