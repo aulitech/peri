@@ -25,6 +25,11 @@ module.exports = {
             textColor,
             backgroundColor,
         },
+        height: {
+            '80vh': '80vh',
+            '85vh': '85vh',
+            '90vh': '90vh'
+        }
     },
     plugins: [],
 }
