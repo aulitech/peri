@@ -18,7 +18,7 @@ const config = {
         }),
         paths: {
             // change below to your repo name
-            base: dev ? "" : "/tw-theme",
+            base: dev ? "" : "/aulitech/tw-theme/docs",
         }
     }
 };
