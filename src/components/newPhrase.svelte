@@ -4,7 +4,7 @@
 </script>
 
 <div class="group w-full p-2 flex flex-row text-base font-normal bg-tertiary">
-	<Speak Speak={Newphrase} />
+	<Speak Speak={{ text: Newphrase, color: '#ffffff80' }} />
 
 	<div class="w-1/2 bg-tertiary">
 		<label for="txt" />
