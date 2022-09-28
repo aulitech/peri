@@ -24,13 +24,8 @@
 <div class="flex flex-row bg-secondary flex-wrap justify-center h-85vh overflow-auto">
 	<div class="flex flex-row flex-wrap justify-start p-4 gap-4 snap-y">
 		{#each Object.entries(filteredTabs).sort() as [tab, cardList]}
-			<details
-				class="group bg-secondary p-2 rounded-md open:snap-start flex flex-col open:bg-tertiary "
-			>
-				<summary
-					class="w-80 p-2 font-bold text-xl text-left text-tertiary group-active:text-primary"
-					>{tab}</summary
-				>
+			<details class="bg-secondary p-2 rounded-md open:snap-start flex flex-col open:bg-tertiary ">
+				<summary class="w-80 p-2 font-bold text-xl text-left text-tertiary">{tab}</summary>
 
 				<ul
 					class="text-base font-normal max-h-[33vh] overflow-auto flex flex-row flex-wrap justify-left gap-x-8 gap-y-2"
