@@ -1,10 +1,12 @@
 <script>
+	import CollapsibleSection from './CollapsibleSection.svelte'
 	import Record from './record.svelte';
 	import Text from './text.svelte';
 	import Speak from './speak.svelte';
 	export let FBCard;
 </script>
 
+<!--
 <details
 	class="w-80 text-secondary rounded-md shadow-sm hover:text-2xl hover:border-white hover:border-8 hover:shadow-md "
 >
@@ -19,15 +21,16 @@
 		<li><Text Text={{ class: 'h-6 w-6', color: '#fedd68a0' }} /></li>
 	</ul>
 </details>
+-->
+
+<CollapsibleSection headerText={FBCard.name} headerClass="w-full p-2 truncate  group  flex flex-row justify-start" >
+	<ul class="flex flex-row justify-evenly">
+		<li ><Speak Speak={{ text: FBCard.name, color: '#fedd68a0' }} /></li>
+		<li><Record Record={{ class: 'h-6 w-6', color: '#fedd68a0' }} /></li>
+		<li><Text Text={{ class: 'h-6 w-6', color: '#fedd68a0' }} /></li>
+	</ul>
+</CollapsibleSection>
 
 <style>
-	summary::-webkit-details-marker {
-		display: none;
-		content: '';
-	}
 
-	summary::marker {
-		display: none;
-		content: '';
-	}
 </style>

@@ -1,4 +1,5 @@
 <script>
+	import CollapsibleSection from '../components/CollapsibleSection.svelte'
 	import FBCard from '../components/card.svelte';
 	import Newphrase from '../components/newPhrase.svelte';
 	import { tabs, fetchCards } from '../cardstore';
@@ -24,6 +25,14 @@
 <div class="flex flex-row bg-secondary flex-wrap justify-center h-85vh overflow-auto">
 	<div class="flex flex-row flex-wrap justify-start p-4 gap-4 snap-y">
 		{#each Object.entries(filteredTabs).sort() as [tab, cardList]}
+			<CollapsibleSection headerText={tab} headerClass="w-80 p-2 font-bold text-xl text-left text-tertiary">
+				{#each cardList.sort() as card}
+					<FBCard FBCard={card} />
+				{/each}
+			</CollapsibleSection>
+
+
+<!--
 			<details class="bg-primary p-2 rounded-md open:snap-start flex flex-col open:bg-tertiary ">
 				<summary class="w-80 p-2 font-bold text-xl text-left text-tertiary">{tab}</summary>
 
@@ -35,6 +44,7 @@
 					{/each}
 				</ul>
 			</details>
+			-->
 		{/each}
 	</div>
 </div>
@@ -55,13 +65,5 @@
 </footer>
 
 <style>
-	summary::-webkit-details-marker {
-		display: none;
-		content: '';
-	}
 
-	summary::marker {
-		display: none;
-		content: '';
-	}
 </style>

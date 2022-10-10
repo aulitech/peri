@@ -1,16 +1,36 @@
 import { writable } from 'svelte/store';
 export const tabs = writable({});
+export const phrases = writable([]);
 import data from '$lib/phrases.json';
 
 const cardDetails = {};
 let loaded = false;
 let myTabs = {}
+let myPhrases = []
+let starters = []
+let counts = {}
+
+
+function onlyUnique(value, index, self) {
+    return self.indexOf(value) === index;
+}
 
 export const fetchCards = async() => {
     if (loaded) return;
     const loadedCards = data.map(makeTab);
 
     tabs.set(myTabs);
+    // Create the phrase table
+    myPhrases = myPhrases.sort().map(phrase => phrase.trim()).filter(onlyUnique);
+    // Create a new table with just the first three words
+    starters = myPhrases.map(phrase => phrase.split(' ').slice(0, 1).join(' '));
+    // Determine the frequency of each Starter
+    counts = starters.reduce(function(acc, key) {
+        return acc[key] ? ++acc[key] : acc[key] = 1, acc
+    }, {});
+    // Sort the starters
+    starters = Object.entries(counts).sort((a, b) => a[1] - b[1]);
+    phrases.set(myPhrases);
     loaded = true;
 };
 
@@ -28,6 +48,10 @@ function makeUniqueKey(s) {
     return key
 }
 
+function addPhrase(phrase) {
+    myPhrases.push(phrase.phrase)
+}
+
 function makeTab(data, index) {
     const key = makeUniqueKey(data.category);
     if (!myTabs[key]) myTabs[key] = [];
@@ -38,6 +62,7 @@ function makeTab(data, index) {
             id: phraseIndex,
             image: ``
         })
+        addPhrase(phrase);
     })
 }
 
