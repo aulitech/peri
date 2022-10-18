@@ -237,11 +237,11 @@
 		{/each}
 	</div>
 </div>
-<div class="flex max-h-[70vh] w-full flex-col bg-primary justify-center">
+<div class="flex max-h-[70vh] w-full flex-col bg-secondary justify-center">
 	<div class="w-full p-8 flex flex-row flex-wrap gap-2 overflow-y-auto">
 		{#each startsWith as phrase}
 			<p
-				class="bg-primary p-4 text-xl rounded-lg text-tertiary hover:bg-tertiary hover:text-primary w-80 sm:w-[90%] md:w-60 "
+				class="p-4 text-xl rounded-lg text-tertiary hover:bg-tertiary hover:text-primary w-80 sm:w-[90%] md:w-60 "
 				on:mouseleave|preventDefault={() => {
 					clearTimeout(dwellTimer);
 				}}
@@ -256,7 +256,7 @@
 		{/each}
 		{#each contains as phrase}
 			<p
-				class="bg-primary p-4 text-xl rounded-lg text-secondary hover:bg-tertiary hover:text-primary w-80 sm:w-[90%] md:w-60 "
+				class="p-4 italic text-xl rounded-lg text-tertiary hover:bg-tertiary hover:text-primary w-80 sm:w-[90%] md:w-60"
 				on:mouseleave|preventDefault={() => {
 					clearTimeout(dwellTimer);
 				}}
