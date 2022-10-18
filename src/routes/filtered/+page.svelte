@@ -89,7 +89,12 @@
 	function dwell(txt, append, tmr) {
 		clearTimeout(dwellTimer);
 		dwellTimer = setTimeout(() => {
-			searchTerm = append ? searchTerm.concat(txt) : txt;
+			if (append)
+			searchTerm = searchTerm.concat(txt)
+			else {
+				searchTerm =  txt;
+				speakNow(txt)
+			}
 		}, tmr);
 	}
 
@@ -129,7 +134,7 @@
 		// Sort the starters
 		starters = Object.entries(nextWord).sort((a, b) => b[1] - a[1]);
 
-		if (startsWith.length + contains.length + starters.length == 0) speakNow(searchTerm);
+		// if (startsWith.length + contains.length + starters.length == 0) speakNow(searchTerm);
 	}
 
 	fetchCards();
@@ -139,7 +144,7 @@
 	<title>Peri</title>
 </svelte:head>
 
-<div class="bg-primary flex flex-col overflow-hidden">
+<div class="bg-tertiary flex flex-col overflow-hidden">
 	<div class="w-full flex flex-row">
 		<ul class="w-full pt-4 pb-2 flex flex-row justify-evenly">
 			<li><Speak Speak={{ text: searchTerm, timeout: dwellInterval, class: 'h-6 w-6 hover:text-primary' }} /></li>
@@ -172,7 +177,7 @@
 				type="search"
 				id="txt"
 				name="txt"
-				class="p-2 w-full rounded-md text-3xl outline-none border-none bg-tertiary text-primary"
+				class="p-2 w-full rounded-md text-3xl outline-none border-none bg-primary text-primary"
 				placeholder="Type a phrase"
 				bind:value={searchTerm}
 				size={searchTerm.length}
@@ -241,11 +246,11 @@
 	<div class="w-full p-8 flex flex-row flex-wrap gap-2 overflow-y-auto">
 		{#each startsWith as phrase}
 			<p
-				class="p-4 text-xl rounded-lg text-tertiary hover:bg-tertiary hover:text-primary w-80 sm:w-[90%] md:w-60 "
+				class="p-4 text-xl rounded-lg text-tertiary hover:bg-tertiary hover:text-primary hover:text-2xl w-80 sm:w-[90%] md:w-60 "
 				on:mouseleave|preventDefault={() => {
 					clearTimeout(dwellTimer);
 				}}
-				on:mouseenter|preventDefault={() => dwell(phrase, false, 1500)}
+				on:mouseenter|preventDefault={() => dwell(phrase, false, dwellInterval)}
 				on:click={() => {
 					clearTimeout(dwellTimer);
 					searchTerm = phrase;
