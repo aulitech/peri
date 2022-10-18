@@ -254,6 +254,7 @@
 				on:click={() => {
 					clearTimeout(dwellTimer);
 					searchTerm = phrase;
+					speakNow(phrase);
 				}}
 			>
 				{phrase}
@@ -269,6 +270,7 @@
 				on:click={() => {
 					clearTimeout(dwellTimer);
 					searchTerm = phrase;
+					speakNow(phrase);
 				}}
 			>
 				{phrase}
