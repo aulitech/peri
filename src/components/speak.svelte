@@ -21,7 +21,7 @@
 	on:mouseenter={() => speak(Speak.text, Speak.timeout)}
 	on:mouseleave={() => clearTimeout(speakTimer)}
 	viewBox="0 0 640 512"
-	class="w-10 p-1 m-2 border-none hover:bg-primary hover:transition-colors hover:ease-in hover:duration-[{Speak.timeout}] {Speak.class}"
+	class="w-10 p-1 m-2 border-none }] {Speak.class}"
 >
 	<path
 		fill="currentColor"

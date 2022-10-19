@@ -200,7 +200,7 @@
 		{/each}
 		{#each kbd as key}
 			<button
-				class="text-2xl w-[3rem] font-bold text-secondary hover:text-primary"
+				class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"
 				on:mouseleave|preventDefault={() => {
 					clearTimeout(dwellTimer);
 				}}
@@ -229,7 +229,7 @@
 	<div class="max-h-24 flex flex-row flex-wrap overflow-hidden">
 		{#each starters as prediction}
 			<button
-				class="p-2 min-w-[3rem] text-2xl text-tertiary hover:text-primary"
+				class="pl-4 pr-4 pt-2 pb-2 min-w-[4rem] rounded-full text-2xl text-tertiary hover:text-primary hover:bg-secondary"
 				on:mouseleave|preventDefault={() => {
 					clearTimeout(dwellTimer);
 				}}
@@ -246,7 +246,7 @@
 	<div class="w-full p-8 flex flex-row flex-wrap gap-2 overflow-y-auto">
 		{#each startsWith as phrase}
 			<p
-				class="p-4 text-xl rounded-lg text-tertiary hover:bg-tertiary hover:text-primary hover:text-2xl w-80 sm:w-[90%] md:w-60 "
+				class="p-4 text-2xl rounded-lg text-tertiary hover:bg-tertiary hover:text-primary hover:text-4xl w-80 sm:w-[90%] md:w-60 "
 				on:mouseleave|preventDefault={() => {
 					clearTimeout(dwellTimer);
 				}}
@@ -262,7 +262,7 @@
 		{/each}
 		{#each contains as phrase}
 			<p
-				class="p-4 italic text-xl rounded-lg text-tertiary hover:bg-tertiary hover:text-primary w-80 sm:w-[90%] md:w-60"
+				class="p-4 italic text-2xl rounded-lg text-tertiary hover:bg-tertiary hover:text-primary hover:text-4xl w-80 sm:w-[90%] md:w-60"
 				on:mouseleave|preventDefault={() => {
 					clearTimeout(dwellTimer);
 				}}
