@@ -134,7 +134,7 @@
 		// Sort the starters
 		starters = Object.entries(nextWord).sort((a, b) => b[1] - a[1]);
 
-		// if (startsWith.length + contains.length + starters.length == 0) speakNow(searchTerm);
+		if (startsWith.length + contains.length + starters.length == 0) speakNow(searchTerm);
 	}
 
 	fetchCards();
@@ -254,7 +254,7 @@
 				on:click={() => {
 					clearTimeout(dwellTimer);
 					searchTerm = phrase;
-					speakNow(phrase);
+					//speakNow(phrase);
 				}}
 			>
 				{phrase}
@@ -270,7 +270,7 @@
 				on:click={() => {
 					clearTimeout(dwellTimer);
 					searchTerm = phrase;
-					speakNow(phrase);
+					//speakNow(phrase);
 				}}
 			>
 				{phrase}
