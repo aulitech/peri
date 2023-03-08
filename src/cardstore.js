@@ -1,15 +1,13 @@
 import { writable } from 'svelte/store';
-export const tabs = writable({});
 export const phrases = writable([]);
-import data from '$lib/phrases.json';
+import data from '$lib/phrasetable.json';
+const phrasefile = "myphrases.json"
 
-const cardDetails = {};
 let loaded = false;
-let myTabs = {}
 let myPhrases = []
+let aliases = []
 let starters = []
 let counts = {}
-
 
 function onlyUnique(value, index, self) {
     return self.indexOf(value) === index;
@@ -17,70 +15,56 @@ function onlyUnique(value, index, self) {
 
 export const fetchCards = async() => {
     if (loaded) return;
-    const loadedCards = data.map(makeTab);
+    aliases = data.aliases
+    myPhrases = data.phrases.map(makePhrases)
 
-    tabs.set(myTabs);
     // Create the phrase table
-    myPhrases = myPhrases.sort().map(phrase => phrase.trim()).filter(onlyUnique);
-    // Create a new table with just the first three words
-    starters = myPhrases.map(phrase => phrase.split(' ').slice(0, 1).join(' '));
-    // Determine the frequency of each Starter
+    myPhrases = myPhrases.sort().map(phrase => phrase.trim()).filter(onlyUnique)
+        // Create a new table with just the first three words
+    starters = myPhrases.map(phrase => phrase.split(' ').slice(0, 1).join(' '))
+        // Determine the frequency of each Starter
     counts = starters.reduce(function(acc, key) {
         return acc[key] ? ++acc[key] : acc[key] = 1, acc
     }, {});
     // Sort the starters
-    starters = Object.entries(counts).sort((a, b) => a[1] - b[1]);
+    starters = Object.entries(counts).sort((a, b) => a[1] - b[1])
     phrases.set(myPhrases);
     loaded = true;
 };
 
-function makeUniqueKey(s) {
-    // This should Scan and make sure the key is unique
-    // When is built correctly. This is a hack OK
-    let key = (!s) ? "" : s.replace(/[^0-9_a-zA-Z ]/g, "-")
-    let keys = Object.keys(myTabs)
-
-    let suffix = 1;
-    while (key in keys) {
-        key = key.replace(/_*\d*$/, "_" + suffix++)
-    }
-
-    return key
+function expand(phrase) {
+    // expand aliases here
+    return phrase.txt
 }
 
-function addPhrase(phrase) {
-    myPhrases.push(phrase.phrase)
+function makePhrases(phrase) {
+    return expand(phrase)
 }
 
-function makeTab(data, index) {
-    const key = makeUniqueKey(data.category);
-    if (!myTabs[key]) myTabs[key] = [];
-    myTabs[key].id = index;
-    data.phrases.forEach((phrase, phraseIndex) => {
-        myTabs[key].push({
-            name: phrase.phrase,
-            id: phraseIndex,
-            image: ``
-        })
-        addPhrase(phrase);
-    })
+function makeAliases() {
+    return []
 }
 
-export const getCardsById = async(id) => {
+export async function savePhrases() {
+    aliases = makeAliases()
+    const opts = {
+        startIn: 'documents',
+        excludeAcceptAllOption: true,
+        suggestedName: phrasefile,
+        types: [{
+            description: 'Phrase file (JSON)',
+            accept: { 'application/json': ['.json'] },
+        }],
+    };
+    // create a new handle
+    const newHandle = await window.showSaveFilePicker(opts);
 
-    return null;
-    /*
-        if (cardDetails[id]) return cardDetails[id];
+    // create a FileSystemWritableFileStream to write to
+    const writableStream = await newHandle.createWritable();
 
-        try {
-            const url = `https://pokeapi.co/api/v2/pokemon/${id}`;
-            const res = await fetch(url);
-            const data = await res.json();
-            cardDetails[id] = data;
-            return data;
-        } catch (err) {
-            console.error(err);
-            return null;
-        }
-        */
-};
+    // write our file
+    await writableStream.truncate(0)
+    await writableStream.write('"{ aliases": ' + JSON.stringify(aliases) + ', "phrases": ' + JSON.stringify(myPhrases) + '}');
+    // close the file and write the contents to disk.
+    await writableStream.close();
+}
