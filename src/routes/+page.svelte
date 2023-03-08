@@ -1,25 +1,25 @@
 <script>
-	import { fetchCards, phrases } from '../cardstore';
+	import { fetchCards, phrases, savePhrases } from '../cardstore';
 	import Record from '../components/record.svelte';
 	import Text from '../components/text.svelte';
 	import Speak from '../components/speak.svelte';
 
-	let searchTerm = 'I';
+	let searchTerm = '';
 	let startsWith = [];
 	let contains = [];
 	let starters = [];
 	let completions = [];
 	let nextWord = [];
-	let counts = {};
 	let dwellTimer;
 	let dwellInterval = 1000;
-	let expanded = false;
 	let searchKey = '';
+	let keylength = 0;
 
 	function speakNow(txt) {
 		var msg = new SpeechSynthesisUtterance();
 		msg.text = txt;
 		window.speechSynthesis.speak(msg);
+		searchTerm = '';
 	}
 
 	function toggleFullScreen() {
@@ -59,7 +59,8 @@
 		}
 	];
 	const leftKeys = [
-		{   // back word
+		{
+			// back word
 			display:
 				'<svg class="h-6 w-6" viewBox="0 0 512 512"><path fill="currentColor" d="M11.5 280.6l192 160c20.6 17.2 52.5 2.8 52.5-24.6V96c0-27.4-31.9-41.8-52.5-24.6l-192 160c-15.3 12.8-15.3 36.4 0 49.2zm256 0l192 160c20.6 17.2 52.5 2.8 52.5-24.6V96c0-27.4-31.9-41.8-52.5-24.6l-192 160c-15.3 12.8-15.3 36.4 0 49.2z"/></svg>',
 			f: () => {
@@ -68,16 +69,16 @@
 				searchTerm = idx == -1 ? '' : searchTerm.slice(0, idx + 1);
 			}
 		},
-		{   // back one space
+		{
+			// back one space
 			display:
 				'<svg class="h-6 w-6" viewBox="0 0 640 512"><path fill="currentColor" d="M576 64H205.26A63.97 63.97 0 0 0 160 82.75L9.37 233.37c-12.5 12.5-12.5 32.76 0 45.25L160 429.25c12 12 28.28 18.75 45.25 18.75H576c35.35 0 64-28.65 64-64V128c0-35.35-28.65-64-64-64zm-84.69 254.06c6.25 6.25 6.25 16.38 0 22.63l-22.62 22.62c-6.25 6.25-16.38 6.25-22.63 0L384 301.25l-62.06 62.06c-6.25 6.25-16.38 6.25-22.63 0l-22.62-22.62c-6.25-6.25-6.25-16.38 0-22.63L338.75 256l-62.06-62.06c-6.25-6.25-6.25-16.38 0-22.63l22.62-22.62c6.25-6.25 16.38-6.25 22.63 0L384 210.75l62.06-62.06c6.25-6.25 16.38-6.25 22.63 0l22.62 22.62c6.25 6.25 6.25 16.38 0 22.63L429.25 256l62.06 62.06z"/></svg>',
 			f: () => {
 				searchTerm = searchTerm.slice(0, -1);
 			}
-		}
-	];
-	const rightKeys = [
-		{   // append a space
+		},
+		{
+			// append a space
 			display:
 				'<svg class="h-6 w-6"  viewBox="0 0 448 512"><path fill="currentColor" d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"/></svg>',
 			f: () => {
@@ -89,11 +90,10 @@
 	function dwell(txt, append, tmr) {
 		clearTimeout(dwellTimer);
 		dwellTimer = setTimeout(() => {
-			if (append)
-			searchTerm = searchTerm.concat(txt)
+			if (append) searchTerm = searchTerm.concat(txt);
 			else {
-				searchTerm =  txt;
-				speakNow(txt)
+				searchTerm = txt;
+				speakNow(txt);
 			}
 		}, tmr);
 	}
@@ -106,15 +106,57 @@
 		return self.indexOf(value) === index;
 	}
 
+	async function fetchCompletions(term) {
+		let url = 'https://api.typewise.ai/latest/completion/complete';
+		const response = await fetch(url, {
+			mode: 'cors', // no-cors, *cors, same-origin
+			cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+			//credentials: 'same-origin', // include, *same-origin, omit
+			headers: {
+				'Content-Type': 'application/json'
+				// 'Content-Type': 'application/x-www-form-urlencoded',
+			},
+			redirect: 'follow', // manual, *follow, error
+			//referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+			method: 'POST',
+			body: JSON.stringify({
+				token: 'string',
+				languages: ['en'],
+				text: term,
+				correctTypoInPartialWord: false,
+				maxNumberOfPredictions: 20
+			})
+		});
+
+		if (response.ok) {
+			const comps = await response.json();
+			comps = comps.prediction.map((p) => p.text);
+			comps = comps.sort().filter(onlyUnique);
+			return comps;
+		} else {
+			const message = `Error: ${response.status}`;
+			throw new Error(message);
+		}
+	}
+
+	function getCompletions(term) {
+		return [] //fetchCompletions(term);
+	}
+
 	$: {
+		// look in personal library
 		searchKey = searchTerm.toLowerCase();
+		// find and sort the phrases in the personal library starting with the search term
 		startsWith = $phrases
 			.filter((phrase) => phrase.toLowerCase().startsWith(searchKey))
 			.sort()
 			.filter(onlyUnique);
 
-		completions = startsWith.map((phrase) => phrase.slice(searchKey.length));
+		// create a new array containing the remaining part of each phrase after removal of the search term
+		keylength = searchKey.length;
+		completions = startsWith.map((phrase) => phrase.slice(keylength));
 
+		//
 		searchKey = searchKey.trim();
 		contains =
 			searchKey.length < 3 // don't bother With Meaningless Matches
@@ -134,7 +176,12 @@
 		// Sort the starters
 		starters = Object.entries(nextWord).sort((a, b) => b[1] - a[1]);
 
-		if (startsWith.length + contains.length + starters.length == 0) speakNow(searchTerm);
+		if (starters.length < 2) {
+			// add from  General word database
+			let nc = getCompletions(searchTerm);
+			starters = starters.concat(nc);
+			//console.log(starters.length);
+		}
 	}
 
 	fetchCards();
@@ -147,9 +194,22 @@
 <div class="bg-tertiary flex flex-col overflow-hidden">
 	<div class="w-full flex flex-row">
 		<ul class="w-full pt-4 pb-2 flex flex-row justify-evenly">
-			<li><Speak Speak={{ text: searchTerm, timeout: dwellInterval, class: 'h-6 w-6 hover:text-primary' }} /></li>
+			<li>
+				<Speak
+					Speak={{ text: searchTerm, timeout: dwellInterval, class: 'h-6 w-6 hover:text-primary' }}
+				/>
+			</li>
 			<li><Record Record={{ class: 'h-6 w-6 hover:text-primary' }} /></li>
 			<li><Text Text={{ class: 'h-6 w-6 hover:text-primary' }} /></li>
+			<li>
+				<button
+					class="w-[3rem] pl-3 text-secondary hover:text-primary"
+					on:click={() => {
+						clearTimeout(dwellTimer);
+						savePhrases();
+					}}>Save</button
+				>
+			</li>
 			<li>
 				<button class="" on:click={() => fs.f()}> {@html fs.display}</button>
 			</li>
@@ -209,19 +269,6 @@
 					clearTimeout(dwellTimer);
 					searchTerm = searchTerm.concat(key);
 				}}>{@html key}</button
-			>
-		{/each}
-		{#each rightKeys as key}
-			<button
-				class="text-2xl w-[3rem] text-secondary hover:text-primary"
-				on:mouseleave|preventDefault={() => {
-					clearTimeout(dwellTimer);
-				}}
-				on:mouseenter|preventDefault={() => dwellF(key.f, dwellInterval)}
-				on:click={() => {
-					clearTimeout(dwellTimer);
-					key.f();
-				}}>{@html key.display}</button
 			>
 		{/each}
 	</div>
