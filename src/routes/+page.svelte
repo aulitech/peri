@@ -129,7 +129,7 @@
 		});
 
 		if (response.ok) {
-			const comps = await response.json();
+			let comps = await response.json();
 			comps = comps.prediction.map((p) => p.text);
 			comps = comps.sort().filter(onlyUnique);
 			return comps;
