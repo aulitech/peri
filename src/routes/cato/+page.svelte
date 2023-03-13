@@ -4,13 +4,19 @@
 			.requestDevice({
 				filters: [
 					{
-						services: ['hid', '6e400001-b5a3-f393-e0a9-e50e24dcca9e']
+						services: ['6e400001-b5a3-f393-e0a9-e50e24dcca9e']
 					}
 				]
 			})
-			.then((device) => device.gatt.connect())
-			.then(() => {
-				console.log('connected');
+			.then((device) => {
+				// Human-readable name of the device.
+				console.log(device.name + ' connecting');
+
+				// Attempts to connect to remote GATT Server.
+				return device.gatt.connect();
+			})
+			.catch((error) => {
+				console.error(error);
 			});
 	}
 
