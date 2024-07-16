@@ -1,5 +1,5 @@
 <script>
-	import { fetchCards, phrases, savePhrases } from '../cardstore';
+	import { fetchCards, phrases, savePhrases, addPhrase, deletePhrase } from '../cardstore';
 	import Record from '../components/record.svelte';
 	import Text from '../components/text.svelte';
 	import Speak from '../components/speak.svelte';
@@ -31,13 +31,13 @@
 	}
 
 	function handleKeydown(e){
+		let enteredPhrase = event.target.value;
 		if(e.key == 'Enter'){
-			event.preventDefault();
-			//console.log($phrases);
-			let textareaContent = event.target.value;
-			//console.log(textareaContent);
-			$phrases.push(textareaContent);
-			console.log($phrases);
+			addPhrase(enteredPhrase);
+		}
+		if(e.key == 'option'){
+			console.log('here');
+			deletePhrase(enteredPhrase);
 		}
 	}
 
@@ -250,12 +250,13 @@
 				type="search"
 				id="txt"
 				name="txt"
-				class="p-2 w-full rounded-md text-3xl outline-none border-none bg-primary text-primary"
+				class="p-2 w-70 rounded-md text-3xl outline-none border-none bg-primary text-primary"
 				placeholder="Type a phrase"
 				bind:value={searchTerm}
 				size={searchTerm.length}
 				on:keydown={handleKeydown}
 			/>
+			<button>Click me</button>
 		</div>
 	</div>
 	<div class="p-2 flex flex-row justify-evenly text-primary">

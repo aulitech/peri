@@ -4,7 +4,10 @@ import data from '$lib/phrasetable.json';
 const phrasefile = "myphrases.json"
 
 let loaded = false;
-let myPhrases = []
+let myPhrases = data.phrases.map(makePhrases);
+myPhrases = myPhrases.sort().map(phrase => phrase.trim()).filter(onlyUnique);
+let phraseSet = new Set(myPhrases);
+
 let aliases = []
 let starters = []
 let counts = {}
@@ -13,14 +16,33 @@ function onlyUnique(value, index, self) {
     return self.indexOf(value) === index;
 }
 
+export function addPhrase(newPhrase){ //maybe add 
+    if(!phraseSet.has(newPhrase)){
+        //myPhrases.unshift(newPhrase);
+        phraseSet.add(newPhrase);
+        myPhrases = Array.from(phraseSet);
+        console.log(myPhrases);
+    }//add an exception if the phrase already exists
+}
+
+export function deletePhrase(deletedPhrase){
+    if(phraseSet.has(deletedPhrase)){
+        phraseSet.delete(deletePhrase);
+        myPhrases = Array.from(phraseSet);
+        console.log(myPhrases);
+    }
+}
+
 export const fetchCards = async() => {
     if (loaded) return;
     aliases = data.aliases
-    myPhrases = data.phrases.map(makePhrases)
-    //console.log(myPhrases);
+
+    //myPhrases = data.phrases.map(makePhrases)
 
     // Create the phrase table
-    myPhrases = myPhrases.sort().map(phrase => phrase.trim()).filter(onlyUnique)
+
+    //myPhrases = myPhrases.sort().map(phrase => phrase.trim()).filter(onlyUnique)
+
         // Create a new table with just the first three words
     starters = myPhrases.map(phrase => phrase.split(' ').slice(0, 1).join(' '))
         // Determine the frequency of each Starter
