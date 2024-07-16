@@ -30,6 +30,17 @@
 		}
 	}
 
+	function handleKeydown(e){
+		if(e.key == 'Enter'){
+			event.preventDefault();
+			//console.log($phrases);
+			let textareaContent = event.target.value;
+			//console.log(textareaContent);
+			$phrases.push(textareaContent);
+			console.log($phrases);
+		}
+	}
+
 	// not easy to localize
 	const kbd = [...Array(26)].map((_, i) => String.fromCharCode('a'.charCodeAt(0) + i));
 
@@ -147,6 +158,8 @@
 		// look in personal library
 		searchKey = searchTerm.toLowerCase();
 		// find and sort the phrases in the personal library starting with the search term
+		//console.log('here');
+		//console.log($phrases);
 		startsWith = $phrases
 			.filter((phrase) => phrase.toLowerCase().startsWith(searchKey))
 			.sort()
@@ -241,6 +254,7 @@
 				placeholder="Type a phrase"
 				bind:value={searchTerm}
 				size={searchTerm.length}
+				on:keydown={handleKeydown}
 			/>
 		</div>
 	</div>

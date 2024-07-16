@@ -15,6 +15,15 @@
 			autofocus
 			placeholder="Type a phrase"
 			on:mouseleave={() => (Newphrase = document.getElementById('txt').value)}
+			on:keydown={handleKeydown}
 		/>
+		<script>
+			function handleKeydown(e){
+				console.log('here');
+				if(e.key == 'enter'){
+					console.log('enter');
+				}
+			}
+		</script>
 	</div>
 </div>

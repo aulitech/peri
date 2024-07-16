@@ -17,6 +17,7 @@ export const fetchCards = async() => {
     if (loaded) return;
     aliases = data.aliases
     myPhrases = data.phrases.map(makePhrases)
+    //console.log(myPhrases);
 
     // Create the phrase table
     myPhrases = myPhrases.sort().map(phrase => phrase.trim()).filter(onlyUnique)
