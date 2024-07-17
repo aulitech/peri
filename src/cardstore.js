@@ -20,14 +20,16 @@ export function addPhrase(newPhrase){ //maybe add
     if(!phraseSet.has(newPhrase)){
         //myPhrases.unshift(newPhrase);
         phraseSet.add(newPhrase);
-        myPhrases = Array.from(phraseSet);
+        myPhrases.push(newPhrase);
+        //myPhrases = Array.from(phraseSet);
         console.log(myPhrases);
     }//add an exception if the phrase already exists
 }
 
 export function deletePhrase(deletedPhrase){
     if(phraseSet.has(deletedPhrase)){
-        phraseSet.delete(deletePhrase);
+        console.log(deletedPhrase);
+        phraseSet.delete(deletedPhrase);
         myPhrases = Array.from(phraseSet);
         console.log(myPhrases);
     }
