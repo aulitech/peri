@@ -12,6 +12,10 @@ let aliases = []
 let starters = []
 let counts = {}
 
+const dbName = 'MyTestDatabase';
+let db;
+//let currentVersion = 3; 
+
 function onlyUnique(value, index, self) {
     return self.indexOf(value) === index;
 }
@@ -92,4 +96,226 @@ export async function savePhrases() {
     await writableStream.write('"{ aliases": ' + JSON.stringify(aliases) + ', "phrases": ' + JSON.stringify(myPhrases) + '}');
     // close the file and write the contents to disk.
     await writableStream.close();
+}
+
+export async function initializeApp(){
+    try {
+        const database = await openDatabase(myPhrases);
+        myPhrases = await getAllPhrases(database);
+        console.log(myPhrases);
+    } catch(error) {
+        console.error('Database initialization error:', error);
+    }
+}
+
+// Function to check if the database exists
+async function checkDatabaseExists() {
+    return new Promise((resolve) => {
+        const request = indexedDB.open(dbName); // Open without version to check existence
+        request.onerror = (event) => {
+            resolve(false); // Database doesn't exist
+        };
+        request.onsuccess = (event) => {
+            db = event.target.result;
+            resolve(true); // Database exists
+        };
+    });
+}
+
+async function openDatabase(phrases) { //get rid of phrases argument
+    console.log("Opening database...");
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(dbName); // Open without a version to get the current version
+  
+      request.onerror = (event) => {
+        console.error("Database error:", event.target.error);
+        reject(event.target.error);
+      };
+      request.onsuccess = (event) => {
+        db = event.target.result;
+        const existingObjectStores = Array.from(db.objectStoreNames);
+        if (!existingObjectStores.includes("phrases")) {
+          db.close(); // Close the current connection
+          const upgradeRequest = indexedDB.open(dbName, db.version + 1); // Increment the version to trigger onupgradeneeded
+  
+          upgradeRequest.onerror = (event) => {
+            console.error("Upgrade error:", event.target.error);
+            reject(event.target.error);
+          };
+  
+          upgradeRequest.onupgradeneeded = (event) => {
+            console.log("Upgrading database...");
+            db = event.target.result;
+            db.createObjectStore("phrases", { keyPath: "phrase" });
+  
+            // Populate the database only during initial creation
+            if (phraseStoreEmpty()) { //slight edge case that if the user deletes every phrase, it will repopulate but we can account for this with a boolean variable (come back to this)
+              populatePhrases(); 
+            }
+          };
+  
+          upgradeRequest.onsuccess = (event) => {
+            db = event.target.result;
+            console.log("Database opened successfully. Version:", db.version);
+            resolve(db);
+          };
+        } else {
+          console.log("Database already exists. Version:", db.version);
+          resolve(db);
+        }
+      };
+    });
+  }
+
+////Come back and make phraseStoreEmpty more efficient!
+
+async function phraseStoreEmpty(){ //!!!!!can make efficient by just checking if the first phrase in the phrase store exists instead of loading the entire store
+    const phrases = await getAllPhrases(db)
+    if (phrases.length == 0){
+        return true;
+    }
+    return false;
+}
+
+export async function addPhrasetoDB(phrase){
+    const transaction = db.transaction(["phrases"], "readwrite");
+    const objectStore = transaction.objectStore("phrases");
+
+    try {
+        const existingPhrase = await (new Promise((resolve, reject) => {
+            const getRequest = objectStore.get(phrase);
+            getRequest.onsuccess = (event) => resolve(event.target.result);
+            getRequest.onerror = (event) => reject(event.target.error);
+        }));
+        
+        if (existingPhrase) {
+            console.log("Phrase already exists:", phrase);
+        } else {
+            const request = objectStore.add({ phrase: phrase }); // Ensure you're adding an object with a 'phrase' property
+            request.onsuccess = (event) => {
+                console.log('Phrase added:', phrase);
+            };
+            request.onerror = (event) => {
+                console.error('Error adding phrase:', event.target.error);
+            };
+        }
+
+        await new Promise((resolve, reject) => {
+            transaction.oncomplete = () => resolve();
+            transaction.onerror = (event) => reject(event.target.error);
+        });
+    } catch (error) {
+        console.error("Transaction error:", error);
+        // Handle the transaction error (e.g., rollback, retry)
+    }
+    //const request = objectStore.add(phrase);
+    //request.onsuccess = (event) => {
+      //  console.log('success ' + event.target.result);
+    //}
+}
+
+export async function deletePhraseFromDB(phrase){
+    const transaction = db.transaction(["phrases"], "readwrite");
+    const objectStore = transaction.objectStore("phrases");
+    try {
+        const existingPhrase = await (new Promise((resolve, reject) => {
+            const getRequest = objectStore.get(phrase);
+            getRequest.onsuccess = (event) => resolve(event.target.result);
+            getRequest.onerror = (event) => reject(event.target.error);
+        }));
+        if(existingPhrase){
+            console.log(phrase);
+            const request = objectStore.delete(phrase);
+            request.onsuccess = (event) => {
+                console.log('Phrase deleted:', phrase);
+            };
+            request.onerror = (event) => {
+                console.error('Error deleting phrase:', event.target.error);
+            };
+        } else {
+            console.log(`phrase ${phrase} does not exist`);
+        }
+        await new Promise((resolve, reject) => {
+            transaction.oncomplete = () => resolve();
+            transaction.onerror = (event) => reject(event.target.error);
+        });
+    } catch (error) {
+        console.error("Transaction error:", error);
+    } finally { //eventually can remove
+        console.log(await getAllPhrases(db));
+    }
+}
+
+/*export function getPhraseFromDB(phrase, db) {
+    const transaction = db.transaction(["phrases"], "readonly");
+    const objectStore = transaction.objectStore("phrases");
+    try {
+        const result = objectStore.get(phrase);
+        console.log(result);
+        return result?.phrase || null; // Optional: Return null if not found
+    } catch (error) {
+        console.error('Error getting phrase:', error);
+        throw error; // Rethrow the error to handle it in initializeApp
+    }
+}*/
+
+async function populatePhrases() {
+    const database = await openDatabase(); // Get the database reference
+    for (const phrase of myPhrases) {
+        await addPhrasetoDB(phrase, database);
+    }
+}
+
+export async function getPhraseFromDB(phrase){
+    let result;
+    //console.log('here', db);
+    return new Promise((resolve, reject) => {
+        db.transaction("phrases")
+        .objectStore("phrases")
+        .get(phrase).onsuccess = (event) => {
+            result = event.target.result;    
+            console.log(result);  
+            resolve(result);
+        }
+    });
+    //output.then(return output);
+    return result;
+}
+async function isObjectStoreEmpty(db, objectStoreName) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([objectStoreName], "readonly");
+
+        const countRequest = objectStore.count();
+
+        countRequest.onsuccess = (event) => {
+            resolve(event.target.result === 0);
+        };
+
+        countRequest.onerror = (event) => {
+            reject(event.target.error);
+        };
+    });
+}
+
+async function getAllPhrases(db) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(["phrases"], "readonly");
+        const objectStore = transaction.objectStore("phrases");
+        const request = objectStore.getAll();
+
+        request.onsuccess = (event) => {
+            const phrases = event.target.result.map(item => item.phrase); // Extract the 'phrase' values
+            console.log('here2');
+            if (phrases.length == 0) {
+                console.log('here');
+                //const phraseObjectStore = event.target.transaction.objectStore("phrases");
+                populatePhrases();
+            }
+            resolve(phrases);
+        };
+
+        request.onerror = (event) => {
+            reject(event.target.error);
+        };
+    });
 }

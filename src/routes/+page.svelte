@@ -1,5 +1,5 @@
 <script>
-	import { fetchCards, phrases, savePhrases, addPhrase, deletePhrase } from '../cardstore';
+	import { fetchCards, phrases, savePhrases, addPhrase, deletePhrase, initializeApp, getPhraseFromDB, deletePhraseFromDB, addPhrasetoDB } from '../cardstore';
 	import Record from '../components/record.svelte';
 	import Text from '../components/text.svelte';
 	import Speak from '../components/speak.svelte';
@@ -14,6 +14,7 @@
 	let dwellInterval = 1000;
 	let searchKey = '';
 	let keylength = 0;
+	initializeApp();
 
 	function speakNow(txt) {
 		var msg = new SpeechSynthesisUtterance();
@@ -30,10 +31,13 @@
 		}
 	}
 
-	function handleKeydown(e){
+	async function handleKeydown(e){
 		let enteredPhrase = event.target.value;
 		if(e.key == 'Enter'){
-			addPhrase(enteredPhrase);
+			//addPhrase(enteredPhrase);
+			//getPhraseFromDB('A little better');
+			const selectedPhrase = await getPhraseFromDB('A little better');
+			console.log(selectedPhrase);
 		}
 		if(e.key == 'option'){
 			console.log('here');
@@ -44,11 +48,13 @@
 	function handleAddPhrase(){
 		const userInput = document.getElementById('txt').value;
 		addPhrase(userInput);
+		addPhrasetoDB(userInput);
 	}
 
 	function handleDeletePhrase(){
 		const userInput = document.getElementById('txt').value;
 		deletePhrase(userInput);
+		deletePhraseFromDB(userInput);
 	}
 
 	// not easy to localize
@@ -276,7 +282,7 @@
 					on:mouseenter|preventDefault={() => dwellF(handleAddPhrase, dwellInterval)}
 					on:click={() => {
 						clearTimeout(dwellTimer);
-						handleDeletePhrase(userInput);
+						handleAddPhrase();
 					}}
 				>Add Phrase</button>
 				<button
