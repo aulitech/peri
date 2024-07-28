@@ -57,7 +57,6 @@ export const fetchCards = async() => {
     }, {});
     // Sort the starters
     starters = Object.entries(counts).sort((a, b) => a[1] - b[1])
-    phrases.set(myPhrases);
     loaded = true;
 };
 
@@ -102,7 +101,7 @@ export async function initializeApp(){
     try {
         const database = await openDatabase(myPhrases);
         myPhrases = await getAllPhrases(database);
-        console.log(myPhrases);
+        updatePhrasesfromDB();
     } catch(error) {
         console.error('Database initialization error:', error);
     }
@@ -134,6 +133,7 @@ async function openDatabase(phrases) { //get rid of phrases argument
       request.onsuccess = (event) => {
         db = event.target.result;
         const existingObjectStores = Array.from(db.objectStoreNames);
+        console.log('object store:', existingObjectStores);
         if (!existingObjectStores.includes("phrases")) {
           db.close(); // Close the current connection
           const upgradeRequest = indexedDB.open(dbName, db.version + 1); // Increment the version to trigger onupgradeneeded
@@ -198,6 +198,7 @@ export async function addPhrasetoDB(phrase){
             request.onerror = (event) => {
                 console.error('Error adding phrase:', event.target.error);
             };
+            updatePhrasesfromDB();
         }
 
         await new Promise((resolve, reject) => {
@@ -208,6 +209,7 @@ export async function addPhrasetoDB(phrase){
         console.error("Transaction error:", error);
         // Handle the transaction error (e.g., rollback, retry)
     }
+    //myPhrases = await getAllPhrases(db);
     //const request = objectStore.add(phrase);
     //request.onsuccess = (event) => {
       //  console.log('success ' + event.target.result);
@@ -224,7 +226,6 @@ export async function deletePhraseFromDB(phrase){
             getRequest.onerror = (event) => reject(event.target.error);
         }));
         if(existingPhrase){
-            console.log(phrase);
             const request = objectStore.delete(phrase);
             request.onsuccess = (event) => {
                 console.log('Phrase deleted:', phrase);
@@ -232,6 +233,7 @@ export async function deletePhraseFromDB(phrase){
             request.onerror = (event) => {
                 console.error('Error deleting phrase:', event.target.error);
             };
+            updatePhrasesfromDB();
         } else {
             console.log(`phrase ${phrase} does not exist`);
         }
@@ -244,6 +246,11 @@ export async function deletePhraseFromDB(phrase){
     } finally { //eventually can remove
         console.log(await getAllPhrases(db));
     }
+}
+
+async function updatePhrasesfromDB(){
+    const newPhrases = await getAllPhrases(db)
+    phrases.set(newPhrases);
 }
 
 /*export function getPhraseFromDB(phrase, db) {

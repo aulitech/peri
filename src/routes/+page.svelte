@@ -15,6 +15,7 @@
 	let searchKey = '';
 	let keylength = 0;
 	initializeApp();
+	let editClicked = false;
 
 	function speakNow(txt) {
 		var msg = new SpeechSynthesisUtterance();
@@ -55,6 +56,20 @@
 		const userInput = document.getElementById('txt').value;
 		deletePhrase(userInput);
 		deletePhraseFromDB(userInput);
+	}
+
+	function handleEditPhrase(){
+		const userInput = document.getElementById('txt').value;
+		if (editClicked) {
+			deletePhrase(userInput);
+			deletePhraseFromDB(userInput);
+			editClicked = false;
+		} else {
+			addPhrase(userInput);
+			addPhrasetoDB(userInput);
+			editClicked = true;
+		}
+
 	}
 
 	// not easy to localize
@@ -297,6 +312,18 @@
 						handleDeletePhrase();
 					}}
 				>Delete Phrase</button>
+				<button
+					id="editPhraseButton"
+					class="w-40 border border-black rounded-md bg-yellow-500 hover:text-primary hover:bg-secondary"
+					on:mouseleave|preventDefault={() => {
+						clearTimeout(dwellTimer);
+					}}
+					on:mouseenter|preventDefault={() => dwellF(handleDeletePhrase, dwellInterval)}
+					on:click={() => {
+						clearTimeout(dwellTimer);
+						handleEditPhrase();
+					}}
+				>Edit Phrase</button>
 
 			<!--<button
 				class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"
