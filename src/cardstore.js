@@ -156,7 +156,7 @@ async function openDatabase(phrases) { //get rid of phrases argument
   
             // Populate the database only during initial creation
             if (phraseStoreEmpty()) { //slight edge case that if the user deletes every phrase, it will repopulate but we can account for this with a boolean variable (come back to this)
-              populatePhrases(); 
+              setDefaultPhrases();
             }
           };
   
@@ -213,17 +213,16 @@ async function getSortedPhrases() {
         if (phraseA > phraseB) return 1;
         return 0;
     });
-    console.log(alphabeticallySortedPhrases.map(item => item.phrase));
+    console.log('alphabet', alphabeticallySortedPhrases.map(item => item.phrase));
 
     const sortedPhrases = alphabeticallySortedPhrases.sort((a, b) => b.frequency - a.frequency); // Sort in descending order of frequency
-    console.log(sortedPhrases.map(item => item.phrase));
+    console.log('real', sortedPhrases.map(item => item.phrase));
     return sortedPhrases.map(item => item.phrase);
 }
 
 export async function addPhrasetoDB(phrase){
-    const transaction = db.transaction(["phrases"], "readwrite");
-    const phraseStore = transaction.objectStore("phrases");
-
+    const phraseTransaction = db.transaction(["phrases"], "readwrite");
+    const phraseStore = phraseTransaction.objectStore("phrases");
     try {
         const existingPhrase = await (new Promise((resolve, reject) => {
             const getRequest = phraseStore.get(phrase);
@@ -355,10 +354,12 @@ async function getAllPhrases(db) {
 
         request.onsuccess = (event) => {
             const phrases = event.target.result.map(item => item.phrase); // Extract the 'phrase' values
+            /*
             if (phrases.length == 0) { //populating phrases shouldn't be here!!!! I think
                 //const phraseObjectStore = event.target.transaction.objectStore("phrases");
                 populatePhrases();
             }
+            */
             resolve(phrases);
         };
 
@@ -377,10 +378,12 @@ async function getAllPhraseFrequencies(db) {
         request.onsuccess = (event) => {
             const phrases = event.target.result; // Extract the 'phrase' values
             console.log(phrases);
+            /*
             if (phrases.length == 0) { //populating phrases shouldn't be here!!!! I think
                 //const phraseObjectStore = event.target.transaction.objectStore("phrases");
                 populatePhrases();
             }
+            */
             resolve(phrases);
         };
 
