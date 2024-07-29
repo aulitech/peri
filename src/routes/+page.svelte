@@ -1,5 +1,5 @@
 <script>
-	import { fetchCards, phrases, savePhrases, addPhrase, deletePhrase, initializeApp, getPhraseFromDB, deletePhraseFromDB, addPhrasetoDB, setDefaultPhrases } from '../cardstore';
+	import { fetchCards, phrases, savePhrases, initializeApp, getPhraseFromDB, deletePhraseFromDB, addPhrasetoDB, setDefaultPhrases } from '../cardstore';
 	import Record from '../components/record.svelte';
 	import Text from '../components/text.svelte';
 	import Speak from '../components/speak.svelte';

@@ -21,7 +21,7 @@ function onlyUnique(value, index, self) {
     return self.indexOf(value) === index;
 }
 
-export function addPhrase(newPhrase){ //maybe add 
+/*export function addPhrase(newPhrase){ //maybe add 
     if(!phraseSet.has(newPhrase)){
         //myPhrases.unshift(newPhrase);
         phraseSet.add(newPhrase);
@@ -38,7 +38,7 @@ export function deletePhrase(deletedPhrase){
         myPhrases = Array.from(phraseSet);
         console.log(myPhrases);
     }
-}
+}*/
 
 export const fetchCards = async() => {
     if (loaded) return;
@@ -135,7 +135,7 @@ async function openDatabase(phrases) { //get rid of phrases argument
         db = event.target.result;
         const existingObjectStores = Array.from(db.objectStoreNames);
         console.log('object store:', existingObjectStores);
-        if (!existingObjectStores.includes("phrases")) {
+        if (!existingObjectStores.includes("phrases") || !existingObjectStores.includes("timeStamps")) {
           db.close(); // Close the current connection
           const upgradeRequest = indexedDB.open(dbName, db.version + 1); // Increment the version to trigger onupgradeneeded
   
@@ -147,7 +147,12 @@ async function openDatabase(phrases) { //get rid of phrases argument
           upgradeRequest.onupgradeneeded = (event) => {
             console.log("Upgrading database...");
             db = event.target.result;
-            db.createObjectStore("phrases", { keyPath: "phrase" });
+            if(!db.objectStoreNames.contains("phrases")){
+                db.createObjectStore("phrases", { keyPath: "phrase" });
+            }
+            if(!db.objectStoreNames.contains("timeStamps")){
+                db.createObjectStore("timeStamps", { autoIncrement: true });
+            }
   
             // Populate the database only during initial creation
             if (phraseStoreEmpty()) { //slight edge case that if the user deletes every phrase, it will repopulate but we can account for this with a boolean variable (come back to this)
@@ -217,21 +222,21 @@ async function getSortedPhrases() {
 
 export async function addPhrasetoDB(phrase){
     const transaction = db.transaction(["phrases"], "readwrite");
-    const objectStore = transaction.objectStore("phrases");
+    const phraseStore = transaction.objectStore("phrases");
 
     try {
         const existingPhrase = await (new Promise((resolve, reject) => {
-            const getRequest = objectStore.get(phrase);
+            const getRequest = phraseStore.get(phrase);
             getRequest.onsuccess = (event) => resolve(event.target.result);
             getRequest.onerror = (event) => reject(event.target.error);
         }));
         
         if (existingPhrase) {
             existingPhrase.frequency++;
-            await objectStore.put(existingPhrase);
+            await phraseStore.put(existingPhrase);
             console.log("Phrase frequency updated:", phrase, existingPhrase.frequency);
         } else {
-            const request = objectStore.add({ phrase: phrase, frequency: 1 }); // Ensure you're adding an object with a 'phrase' property
+            const request = phraseStore.add({ phrase: phrase, frequency: 1 }); // Ensure you're adding an object with a 'phrase' property
             request.onsuccess = (event) => {
                 console.log('Phrase added:', phrase);
             };
