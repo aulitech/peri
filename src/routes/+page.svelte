@@ -15,7 +15,7 @@
 	let searchKey = '';
 	let keylength = 0;
 	initializeApp();
-	let editClicked = false;
+	let editDeletedPhrase = null;
 
 	function speakNow(txt) {
 		var msg = new SpeechSynthesisUtterance();
@@ -48,28 +48,24 @@
 
 	function handleAddPhrase(){
 		const userInput = document.getElementById('txt').value;
-		addPhrase(userInput);
+		//addPhrase(userInput);
 		addPhrasetoDB(userInput);
 	}
 
 	function handleDeletePhrase(){
 		const userInput = document.getElementById('txt').value;
-		deletePhrase(userInput);
 		deletePhraseFromDB(userInput);
 	}
 
 	function handleEditPhrase(){
 		const userInput = document.getElementById('txt').value;
-		if (editClicked) {
-			deletePhrase(userInput);
-			deletePhraseFromDB(userInput);
-			editClicked = false;
-		} else {
-			addPhrase(userInput);
+		if (editDeletedPhrase) {
+			deletePhraseFromDB(editDeletedPhrase);
 			addPhrasetoDB(userInput);
-			editClicked = true;
+			editDeletedPhrase = null;
+		} else {
+			editDeletedPhrase = userInput;
 		}
-
 	}
 
 	// not easy to localize

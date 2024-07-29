@@ -14,7 +14,6 @@ let counts = {}
 
 const dbName = 'MyTestDatabase';
 let db;
-//let currentVersion = 3; 
 
 function onlyUnique(value, index, self) {
     return self.indexOf(value) === index;
@@ -177,6 +176,24 @@ async function phraseStoreEmpty(){ //!!!!!can make efficient by just checking if
     return false;
 }
 
+async function setDefaultPhrases(db){
+    const transaction = db.transaction(["phrases"], "readwrite");
+    const objectStore = transaction.objectStore("phrases");
+    try {
+        await objectStore.clear(); // Clear the existing object store
+        console.log("Object store cleared");
+
+        // Add default phrases with frequencies
+        for (const phrase of myPhrases) {
+            await objectStore.add({ phrase: phrase, frequency: 0 });
+        }
+        console.log("Default phrases added");
+    } catch (error) {
+        console.error("Error resetting to defaults:", error);
+        // Handle the error appropriately (e.g., display an error message)
+    }
+}
+
 export async function addPhrasetoDB(phrase){
     const transaction = db.transaction(["phrases"], "readwrite");
     const objectStore = transaction.objectStore("phrases");
@@ -189,9 +206,11 @@ export async function addPhrasetoDB(phrase){
         }));
         
         if (existingPhrase) {
-            console.log("Phrase already exists:", phrase);
+            existingPhrase.frequency++;
+            await objectStore.put(existingPhrase);
+            console.log("Phrase frequency updated:", phrase, existingPhrase.frequency);
         } else {
-            const request = objectStore.add({ phrase: phrase }); // Ensure you're adding an object with a 'phrase' property
+            const request = objectStore.add({ phrase: phrase, frequency: 1 }); // Ensure you're adding an object with a 'phrase' property
             request.onsuccess = (event) => {
                 console.log('Phrase added:', phrase);
             };
@@ -243,8 +262,6 @@ export async function deletePhraseFromDB(phrase){
         });
     } catch (error) {
         console.error("Transaction error:", error);
-    } finally { //eventually can remove
-        console.log(await getAllPhrases(db));
     }
 }
 
