@@ -1,5 +1,5 @@
 <script>
-	import { fetchCards, phrases, savePhrases, addPhrase, deletePhrase, initializeApp, getPhraseFromDB, deletePhraseFromDB, addPhrasetoDB } from '../cardstore';
+	import { fetchCards, phrases, savePhrases, addPhrase, deletePhrase, initializeApp, getPhraseFromDB, deletePhraseFromDB, addPhrasetoDB, setDefaultPhrases } from '../cardstore';
 	import Record from '../components/record.svelte';
 	import Text from '../components/text.svelte';
 	import Speak from '../components/speak.svelte';
@@ -66,6 +66,10 @@
 		} else {
 			editDeletedPhrase = userInput;
 		}
+	}
+
+	function HandleSetDefaults(){
+		setDefaultPhrases();
 	}
 
 	// not easy to localize
@@ -189,7 +193,6 @@
 		//console.log($phrases);
 		startsWith = $phrases
 			.filter((phrase) => phrase.toLowerCase().startsWith(searchKey))
-			.sort()
 			.filter(onlyUnique);
 
 		// create a new array containing the remaining part of each phrase after removal of the search term
@@ -320,6 +323,18 @@
 						handleEditPhrase();
 					}}
 				>Edit Phrase</button>
+				<button
+					id="defaultsButton"
+					class="w-40 border border-black rounded-md bg-yellow-500 hover:text-primary hover:bg-secondary"
+					on:mouseleave|preventDefault={() => {
+						clearTimeout(dwellTimer);
+					}}
+					on:mouseenter|preventDefault={() => dwellF(handleDeletePhrase, dwellInterval)}
+					on:click={() => {
+						clearTimeout(dwellTimer);
+						HandleSetDefaults();
+					}}
+				>Reset Defaults</button>
 
 			<!--<button
 				class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"

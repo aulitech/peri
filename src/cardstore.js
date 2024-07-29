@@ -6,6 +6,8 @@ const phrasefile = "myphrases.json"
 let loaded = false;
 let myPhrases = data.phrases.map(makePhrases);
 myPhrases = myPhrases.sort().map(phrase => phrase.trim()).filter(onlyUnique);
+let defaultPhrases = data.phrases.map(makePhrases);
+defaultPhrases = myPhrases.sort().map(phrase => phrase.trim()).filter(onlyUnique);
 let phraseSet = new Set(myPhrases);
 
 let aliases = []
@@ -176,7 +178,7 @@ async function phraseStoreEmpty(){ //!!!!!can make efficient by just checking if
     return false;
 }
 
-async function setDefaultPhrases(db){
+export async function setDefaultPhrases(){
     const transaction = db.transaction(["phrases"], "readwrite");
     const objectStore = transaction.objectStore("phrases");
     try {
@@ -184,14 +186,33 @@ async function setDefaultPhrases(db){
         console.log("Object store cleared");
 
         // Add default phrases with frequencies
-        for (const phrase of myPhrases) {
+        for (const phrase of defaultPhrases) {
             await objectStore.add({ phrase: phrase, frequency: 0 });
         }
+        updatePhrasesfromDB();
         console.log("Default phrases added");
+        console.log(await getAllPhraseFrequencies(db));
     } catch (error) {
         console.error("Error resetting to defaults:", error);
         // Handle the error appropriately (e.g., display an error message)
     }
+}
+
+async function getSortedPhrases() {
+    const unsortedPhrases = await getAllPhraseFrequencies(db);
+
+    const alphabeticallySortedPhrases = unsortedPhrases.sort((a, b) => { //sort alphabetically
+        const phraseA = a.phrase.toLowerCase();
+        const phraseB = b.phrase.toLowerCase();
+        if (phraseA < phraseB) return -1;
+        if (phraseA > phraseB) return 1;
+        return 0;
+    });
+    console.log(alphabeticallySortedPhrases.map(item => item.phrase));
+
+    const sortedPhrases = alphabeticallySortedPhrases.sort((a, b) => b.frequency - a.frequency); // Sort in descending order of frequency
+    console.log(sortedPhrases.map(item => item.phrase));
+    return sortedPhrases.map(item => item.phrase);
 }
 
 export async function addPhrasetoDB(phrase){
@@ -266,7 +287,8 @@ export async function deletePhraseFromDB(phrase){
 }
 
 async function updatePhrasesfromDB(){
-    const newPhrases = await getAllPhrases(db)
+    const newPhrases = await getSortedPhrases();
+    console.log(newPhrases);
     phrases.set(newPhrases);
 }
 
@@ -292,7 +314,6 @@ async function populatePhrases() {
 
 export async function getPhraseFromDB(phrase){
     let result;
-    //console.log('here', db);
     return new Promise((resolve, reject) => {
         db.transaction("phrases")
         .objectStore("phrases")
@@ -329,9 +350,29 @@ async function getAllPhrases(db) {
 
         request.onsuccess = (event) => {
             const phrases = event.target.result.map(item => item.phrase); // Extract the 'phrase' values
-            console.log('here2');
-            if (phrases.length == 0) {
-                console.log('here');
+            if (phrases.length == 0) { //populating phrases shouldn't be here!!!! I think
+                //const phraseObjectStore = event.target.transaction.objectStore("phrases");
+                populatePhrases();
+            }
+            resolve(phrases);
+        };
+
+        request.onerror = (event) => {
+            reject(event.target.error);
+        };
+    });
+}
+
+async function getAllPhraseFrequencies(db) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(["phrases"], "readonly");
+        const objectStore = transaction.objectStore("phrases");
+        const request = objectStore.getAll();
+
+        request.onsuccess = (event) => {
+            const phrases = event.target.result; // Extract the 'phrase' values
+            console.log(phrases);
+            if (phrases.length == 0) { //populating phrases shouldn't be here!!!! I think
                 //const phraseObjectStore = event.target.transaction.objectStore("phrases");
                 populatePhrases();
             }
