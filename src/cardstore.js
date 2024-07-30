@@ -102,11 +102,17 @@ export async function initializeApp(){
     try {
         const database = await openDatabase(myPhrases);
         myPhrases = await getAllPhrases(database);
-        getAllTimeStamps(database);
+        handleTimeStamps(database);
         updatePhrasesfromDB();
+        console.log('here');
     } catch(error) {
         console.error('Database initialization error:', error);
     }
+}
+
+function handleTimeStamps(database) {
+    resetPhraseWeights(database);
+    getAllTimeStamps(database);
 }
 
 // Function to check if the database exists
@@ -197,7 +203,6 @@ export async function setDefaultPhrases(){
         }
         updatePhrasesfromDB();
         console.log("Default phrases added");
-        console.log(await getAllPhraseFrequencies(db));
     } catch (error) {
         console.error("Error resetting to defaults:", error);
         // Handle the error appropriately (e.g., display an error message)
@@ -214,10 +219,8 @@ async function getSortedPhrases() {
         if (phraseA > phraseB) return 1;
         return 0;
     });
-    console.log('alphabet', alphabeticalPhrases.map(item => item.phrase));
 
     const sortedPhrases = alphabeticalPhrases.sort((a, b) => b.weight - a.weight); // Sort in descending order of frequency
-    console.log('real', sortedPhrases.map(item => item.phrase));
     return sortedPhrases.map(item => item.phrase);
 }
 
@@ -252,7 +255,7 @@ async function getAllTimeStamps(db, maxAgeDays = 7) {
                             const timeElapsed = Date.now() - timeStampId.timeStamp;
                             const maxWeightAge = maxAgeDays * 24 * 60 * 60 * 1000;
                             //const weight = Math.max(0, (maxWeightAge - timeElapsed) / maxWeightAge);
-                            const weight = 1 / (Date.now() - timestamp.timestamp + 1);
+                            const weight = 1 / (Date.now() - timeStampId.timeStamp + 1);
                             existingPhrase.weight = (existingPhrase.weight || 0) + weight;
                             phraseStore.put(existingPhrase); // Update the existing object 
                             //updatedPhrases.push(existingPhrase);
@@ -294,14 +297,17 @@ export async function addTimeStampToDB(phrase){
 }
 
 async function resetPhraseWeights(db) {
-    const transaction = db.transaction("phrases");
-    const phraseStore = transaction.objectStore(["phrases"], "readwrite");
     const phrases = await getAllPhrases(db);
     try {
         for (const phrase of phrases) {
-            const currentPhrase = await phraseStore.get(phrase);
-            currentPhrase.weight = 0;
-            await phraseStore.put(currentPhrase);
+            const transaction = db.transaction(["phrases"], "readwrite");
+            const phraseStore = transaction.objectStore("phrases");
+            const phraseRequest = phraseStore.get(phrase);
+            phraseRequest.onsuccess = (event) => {
+                const currentPhrase = event.target.result;
+                currentPhrase.weight = 0;
+                phraseStore.put(currentPhrase);
+            }
         }
     } catch (error) {
         console.error("Error resetting weights:", error);
