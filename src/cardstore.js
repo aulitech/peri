@@ -102,6 +102,7 @@ export async function initializeApp(){
     try {
         const database = await openDatabase(myPhrases);
         myPhrases = await getAllPhrases(database);
+        getAllTimeStamps(database);
         updatePhrasesfromDB();
     } catch(error) {
         console.error('Database initialization error:', error);
@@ -153,12 +154,10 @@ async function openDatabase(phrases) { //get rid of phrases argument
             if(!db.objectStoreNames.contains("timeStamps")){
                 db.createObjectStore("timeStamps", { autoIncrement: true });
             }
-  
-            // Populate the database only during initial creation
-            if (phraseStoreEmpty()) { //slight edge case that if the user deletes every phrase, it will repopulate but we can account for this with a boolean variable (come back to this)
-              setDefaultPhrases();
-            }
           };
+          if (phraseStoreEmpty()) { //slight edge case that if the user deletes every phrase, it will repopulate but we can account for this with a boolean variable (come back to this)
+            setDefaultPhrases();
+          }
   
           upgradeRequest.onsuccess = (event) => {
             db = event.target.result;
@@ -184,15 +183,17 @@ async function phraseStoreEmpty(){ //!!!!!can make efficient by just checking if
 }
 
 export async function setDefaultPhrases(){
-    const transaction = db.transaction(["phrases"], "readwrite");
-    const objectStore = transaction.objectStore("phrases");
+    const transaction = db.transaction(["phrases", "timeStamps"], "readwrite");
+    const phraseStore = transaction.objectStore("phrases");
+    const timeStampStore = transaction.objectStore("timeStamps");
     try {
-        await objectStore.clear(); // Clear the existing object store
+        await timeStampStore.clear();
+        await phraseStore.clear(); // Clear the existing object store
         console.log("Object store cleared");
 
         // Add default phrases with frequencies
         for (const phrase of defaultPhrases) {
-            await objectStore.add({ phrase: phrase, frequency: 0 });
+            await phraseStore.add({ phrase: phrase, frequency: 0, weight: 0 });
         }
         updatePhrasesfromDB();
         console.log("Default phrases added");
@@ -206,36 +207,123 @@ export async function setDefaultPhrases(){
 async function getSortedPhrases() {
     const unsortedPhrases = await getAllPhraseFrequencies(db);
 
-    const alphabeticallySortedPhrases = unsortedPhrases.sort((a, b) => { //sort alphabetically
+    const alphabeticalPhrases = unsortedPhrases.sort((a, b) => { //sort alphabetically
         const phraseA = a.phrase.toLowerCase();
         const phraseB = b.phrase.toLowerCase();
         if (phraseA < phraseB) return -1;
         if (phraseA > phraseB) return 1;
         return 0;
     });
-    console.log('alphabet', alphabeticallySortedPhrases.map(item => item.phrase));
+    console.log('alphabet', alphabeticalPhrases.map(item => item.phrase));
 
-    const sortedPhrases = alphabeticallySortedPhrases.sort((a, b) => b.frequency - a.frequency); // Sort in descending order of frequency
+    const sortedPhrases = alphabeticalPhrases.sort((a, b) => b.weight - a.weight); // Sort in descending order of frequency
     console.log('real', sortedPhrases.map(item => item.phrase));
     return sortedPhrases.map(item => item.phrase);
 }
 
-export async function addPhrasetoDB(phrase){
-    const phraseTransaction = db.transaction(["phrases"], "readwrite");
-    const phraseStore = phraseTransaction.objectStore("phrases");
+async function getAllTimeStamps(db, maxAgeDays = 7) {
+    return new Promise(async (resolve, reject) => {
+        const transaction = db.transaction(["timeStamps", "phrases"], "readwrite");
+        const timeStampStore = transaction.objectStore("timeStamps");
+        const phraseStore = transaction.objectStore("phrases");
+
+        const request = timeStampStore.getAll();
+        request.onsuccess = async (event) => {
+            let timeStamps = event.target.result;
+            const expirationTimestamp = Date.now() - maxAgeDays * 24 * 60 * 60 * 1000;
+            
+            for (let i = 0; i < timeStamps.length; i++){
+                const timeStampId = timeStamps[i];
+                if (timeStampId.timeStamp < expirationTimestamp){
+                    try {
+                        await timeStampStore.delete(timeStampId);
+                        timeStamps.splice(i, 1);
+                        i--;
+                    } catch(error) {
+                        console.error("Error deleting timestamp", error);
+                    } 
+                } else {
+                    try {
+                        const phraseRequest = phraseStore.get(timeStampId.phrase);
+                        phraseRequest.onsuccess = (event) => {
+                            const existingPhrase = event.target.result;
+                            console.log(existingPhrase); 
+                            if (existingPhrase) {
+                            const timeElapsed = Date.now() - timeStampId.timeStamp;
+                            const maxWeightAge = maxAgeDays * 24 * 60 * 60 * 1000;
+                            //const weight = Math.max(0, (maxWeightAge - timeElapsed) / maxWeightAge);
+                            const weight = 1 / (Date.now() - timestamp.timestamp + 1);
+                            existingPhrase.weight = (existingPhrase.weight || 0) + weight;
+                            phraseStore.put(existingPhrase); // Update the existing object 
+                            //updatedPhrases.push(existingPhrase);
+                            console.log("Phrase weight updated:", existingPhrase.phrase, existingPhrase.weight);
+                            }
+                        }
+                        /*console.log('id:', timeStampId)
+                        const existingPhrase = await phraseStore.get(timeStampId.phrase);
+                        console.log(existingPhrase.result);
+                        if (existingPhrase) {
+                            const currentWeight = 1 / (Date.now() - timeStampId.timeStamp);
+                            existingPhrase.weight += currentWeight;
+                            await phraseStore.put(existingPhrase);
+                            console.log("Phrase weight updated:", existingPhrase.phrase, existingPhrase.weight);
+                        }*/
+                    } catch (error) {
+                        console.error("Transaction error:", error);
+                    }
+                }
+            }
+        }
+        request.onerror = (event) => {
+            reject(event.target.error);
+        }
+    });
+}
+
+export async function addTimeStampToDB(phrase){
+    const transaction = db.transaction(["timeStamps"], "readwrite");
+    const timeStampStore = transaction.objectStore("timeStamps");
+    const timeStamp = Date.now();
+    const addRequest = timeStampStore.add({ timeStamp: timeStamp, phrase: phrase });
+    addRequest.onsuccess = (event) => {
+        console.log('Timestamp added:', timeStampStore);
+    }
+    addRequest.onerror = (event) => {
+        console.error("Error adding timestamp:", event.target.error);
+    };
+}
+
+async function resetPhraseWeights(db) {
+    const transaction = db.transaction("phrases");
+    const phraseStore = transaction.objectStore(["phrases"], "readwrite");
+    const phrases = await getAllPhrases(db);
+    try {
+        for (const phrase of phrases) {
+            const currentPhrase = await phraseStore.get(phrase);
+            currentPhrase.weight = 0;
+            await phraseStore.put(currentPhrase);
+        }
+    } catch (error) {
+        console.error("Error resetting weights:", error);
+    }
+}
+
+export async function addPhraseToDB(phrase){
+    const transaction = db.transaction(["phrases"], "readwrite");
+    const objectStore = transaction.objectStore("phrases");
     try {
         const existingPhrase = await (new Promise((resolve, reject) => {
-            const getRequest = phraseStore.get(phrase);
+            const getRequest = objectStore.get(phrase);
             getRequest.onsuccess = (event) => resolve(event.target.result);
             getRequest.onerror = (event) => reject(event.target.error);
         }));
         
         if (existingPhrase) {
             existingPhrase.frequency++;
-            await phraseStore.put(existingPhrase);
+            await objectStore.put(existingPhrase);
             console.log("Phrase frequency updated:", phrase, existingPhrase.frequency);
         } else {
-            const request = phraseStore.add({ phrase: phrase, frequency: 1 }); // Ensure you're adding an object with a 'phrase' property
+            const request = objectStore.add({ phrase: phrase, frequency: 1, weight: 0 }); // Ensure you're adding an object with a 'phrase' property
             request.onsuccess = (event) => {
                 console.log('Phrase added:', phrase);
             };
@@ -292,7 +380,6 @@ export async function deletePhraseFromDB(phrase){
 
 async function updatePhrasesfromDB(){
     const newPhrases = await getSortedPhrases();
-    console.log(newPhrases);
     phrases.set(newPhrases);
 }
 

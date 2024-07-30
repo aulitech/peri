@@ -1,5 +1,5 @@
 <script>
-	import { fetchCards, phrases, savePhrases, initializeApp, getPhraseFromDB, deletePhraseFromDB, addPhrasetoDB, setDefaultPhrases } from '../cardstore';
+	import { fetchCards, phrases, savePhrases, initializeApp, getPhraseFromDB, deletePhraseFromDB, addPhraseToDB, setDefaultPhrases, addTimeStampToDB } from '../cardstore';
 	import Record from '../components/record.svelte';
 	import Text from '../components/text.svelte';
 	import Speak from '../components/speak.svelte';
@@ -48,8 +48,8 @@
 
 	function handleAddPhrase(){
 		const userInput = document.getElementById('txt').value;
-		//addPhrase(userInput);
-		addPhrasetoDB(userInput);
+		addPhraseToDB(userInput);
+		addTimeStampToDB(userInput);
 	}
 
 	function handleDeletePhrase(){
@@ -61,7 +61,7 @@
 		const userInput = document.getElementById('txt').value;
 		if (editDeletedPhrase) {
 			deletePhraseFromDB(editDeletedPhrase);
-			addPhrasetoDB(userInput);
+			addPhraseToDB(userInput);
 			editDeletedPhrase = null;
 		} else {
 			editDeletedPhrase = userInput;
