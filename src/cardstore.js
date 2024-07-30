@@ -21,25 +21,6 @@ function onlyUnique(value, index, self) {
     return self.indexOf(value) === index;
 }
 
-/*export function addPhrase(newPhrase){ //maybe add 
-    if(!phraseSet.has(newPhrase)){
-        //myPhrases.unshift(newPhrase);
-        phraseSet.add(newPhrase);
-        myPhrases.push(newPhrase);
-        //myPhrases = Array.from(phraseSet);
-        console.log(myPhrases);
-    }//add an exception if the phrase already exists
-}
-
-export function deletePhrase(deletedPhrase){
-    if(phraseSet.has(deletedPhrase)){
-        console.log(deletedPhrase);
-        phraseSet.delete(deletedPhrase);
-        myPhrases = Array.from(phraseSet);
-        console.log(myPhrases);
-    }
-}*/
-
 export const fetchCards = async() => {
     if (loaded) return;
     aliases = data.aliases
@@ -262,15 +243,6 @@ async function getAllTimeStamps(db, maxAgeDays = 7) {
                             console.log("Phrase weight updated:", existingPhrase.phrase, existingPhrase.weight);
                             }
                         }
-                        /*console.log('id:', timeStampId)
-                        const existingPhrase = await phraseStore.get(timeStampId.phrase);
-                        console.log(existingPhrase.result);
-                        if (existingPhrase) {
-                            const currentWeight = 1 / (Date.now() - timeStampId.timeStamp);
-                            existingPhrase.weight += currentWeight;
-                            await phraseStore.put(existingPhrase);
-                            console.log("Phrase weight updated:", existingPhrase.phrase, existingPhrase.weight);
-                        }*/
                     } catch (error) {
                         console.error("Transaction error:", error);
                     }
