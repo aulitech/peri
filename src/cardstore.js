@@ -154,6 +154,7 @@ async function openDatabase() { //get rid of phrases argument
           resolve(db);
         }
         if (phraseStoreEmpty()) { //slight edge case that if the user deletes every phrase, it will repopulate but we can account for this with a boolean variable (come back to this)
+            console.log('heredefault');
             setDefaultPhrases();
         }
       };
@@ -164,7 +165,9 @@ async function openDatabase() { //get rid of phrases argument
 
 async function phraseStoreEmpty(){ //!!!!!can make efficient by just checking if the first phrase in the phrase store exists instead of loading the entire store
     const phrases = await getAllPhrases(db)
+    console.log('phrases2:', phrases);
     if (phrases.length == 0){
+        console.log('bro cmon');
         return true;
     }
     return false;
@@ -215,6 +218,7 @@ async function getAllTimeStamps(db, maxAgeDays = 7) {
         const request = timeStampStore.getAll();
         request.onsuccess = async (event) => {
             let timeStamps = event.target.result;
+            console.log('time stamps: ', timeStamps);
             const expirationTimestamp = Date.now() - maxAgeDays * 24 * 60 * 60 * 1000;
             
             for (let i = 0; i < timeStamps.length; i++){
@@ -238,6 +242,7 @@ async function getAllTimeStamps(db, maxAgeDays = 7) {
                             const maxWeightAge = maxAgeDays * 24 * 60 * 60 * 1000;
                             //const weight = Math.max(0, (maxWeightAge - timeElapsed) / maxWeightAge);
                             const weight = 1 / (Date.now() - timeStampId.timeStamp + 1);
+                            console.log('this phrase:', existingPhrase);
                             existingPhrase.weight = (existingPhrase.weight || 0) + weight;
                             phraseStore.put(existingPhrase); // Update the existing object 
                             //updatedPhrases.push(existingPhrase);
@@ -304,7 +309,7 @@ export async function addPhraseToDB(phrase){
         } else {
             const request = objectStore.add({ phrase: phrase, frequency: 1, weight: 0 }); // Ensure you're adding an object with a 'phrase' property
             request.onsuccess = (event) => {
-                console.log('Phrase added:', phrase);
+                console.log('Phrase added:', event.target.result);
             };
             request.onerror = (event) => {
                 console.error('Error adding phrase:', event.target.error);
