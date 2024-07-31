@@ -32,6 +32,7 @@ export const fetchCards = async() => {
     //myPhrases = myPhrases.sort().map(phrase => phrase.trim()).filter(onlyUnique)
 
         // Create a new table with just the first three words
+    
     starters = myPhrases.map(phrase => phrase.split(' ').slice(0, 1).join(' '))
         // Determine the frequency of each Starter
     counts = starters.reduce(function(acc, key) {
@@ -81,7 +82,7 @@ export async function savePhrases() {
 
 export async function initializeApp(){
     try {
-        const database = await openDatabase(myPhrases);
+        const database = await openDatabase();
         myPhrases = await getAllPhrases(database);
         handleTimeStamps(database);
         updatePhrasesfromDB();
@@ -110,7 +111,7 @@ async function checkDatabaseExists() {
     });
 }
 
-async function openDatabase(phrases) { //get rid of phrases argument
+async function openDatabase() { //get rid of phrases argument
     console.log("Opening database...");
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(dbName); // Open without a version to get the current version
@@ -361,26 +362,6 @@ async function updatePhrasesfromDB(){
     phrases.set(newPhrases);
 }
 
-/*export function getPhraseFromDB(phrase, db) {
-    const transaction = db.transaction(["phrases"], "readonly");
-    const objectStore = transaction.objectStore("phrases");
-    try {
-        const result = objectStore.get(phrase);
-        console.log(result);
-        return result?.phrase || null; // Optional: Return null if not found
-    } catch (error) {
-        console.error('Error getting phrase:', error);
-        throw error; // Rethrow the error to handle it in initializeApp
-    }
-}*/
-
-async function populatePhrases() {
-    const database = await openDatabase(); // Get the database reference
-    for (const phrase of myPhrases) {
-        await addPhrasetoDB(phrase, database);
-    }
-}
-
 export async function getPhraseFromDB(phrase){
     let result;
     return new Promise((resolve, reject) => {
@@ -442,7 +423,7 @@ async function getAllPhraseFrequencies(db) {
 
         request.onsuccess = (event) => {
             const phrases = event.target.result; // Extract the 'phrase' values
-            console.log(phrases);
+            console.log('phrases1:',phrases);
             /*
             if (phrases.length == 0) { //populating phrases shouldn't be here!!!! I think
                 //const phraseObjectStore = event.target.transaction.objectStore("phrases");
