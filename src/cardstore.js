@@ -142,6 +142,10 @@ async function openDatabase() { //get rid of phrases argument
             if(!db.objectStoreNames.contains("timeStamps")){
                 db.createObjectStore("timeStamps", { autoIncrement: true });
             }
+            if (phraseStoreEmpty()) { //slight edge case that if the user deletes every phrase, it will repopulate but we can account for this with a boolean variable (come back to this)
+                console.log('heredefault');
+                setDefaultPhrases();
+            }
           };
   
           upgradeRequest.onsuccess = (event) => {
@@ -152,10 +156,6 @@ async function openDatabase() { //get rid of phrases argument
         } else {
           console.log("Database already exists. Version:", db.version);
           resolve(db);
-        }
-        if (phraseStoreEmpty()) { //slight edge case that if the user deletes every phrase, it will repopulate but we can account for this with a boolean variable (come back to this)
-            console.log('heredefault');
-            setDefaultPhrases();
         }
       };
     });
