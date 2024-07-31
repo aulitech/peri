@@ -140,7 +140,7 @@ async function openDatabase() { //get rid of phrases argument
         console.error("Database error:", event.target.error);
         reject(event.target.error);
       };
-      request.onsuccess = (event) => {
+      request.onsuccess = async (event) => {
         let phraseDBEmpty = false;
         db = event.target.result;
         const existingObjectStores = Array.from(db.objectStoreNames);
@@ -154,7 +154,7 @@ async function openDatabase() { //get rid of phrases argument
             reject(event.target.error);
           };
   
-          upgradeRequest.onupgradeneeded = (event) => {
+          upgradeRequest.onupgradeneeded = async (event) => {
             console.log("Upgrading database...");
             db = event.target.result;
             if(!db.objectStoreNames.contains("phrases")){
@@ -178,12 +178,18 @@ async function openDatabase() { //get rid of phrases argument
           };
         } else {
           console.log("Database already exists. Version:", db.version);
-          const isEmptyRequest = phraseStoreEmpty(db);
+          if(await phraseStoreEmpty(db)){
+            setDefaultPhrases();
+          }
+          /*const isEmptyRequest = phraseStoreEmpty(db);
           isEmptyRequest.onsuccess = (event) => {
             console.log('event here', event.target.result);
             setDefaultPhrases();
             resolve(db);
           }
+          isEmptyRequest.onerror = (event) => {
+            error.log('emptyRequest error:', error);
+          }*/
           resolve(db);
         }
         /*if(phraseStoreEmpty(database)){
