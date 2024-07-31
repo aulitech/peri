@@ -86,7 +86,7 @@ export async function initializeApp(){
         myPhrases = await getAllPhrases(database);
         handleTimeStamps(database);
         updatePhrasesfromDB();
-        console.log('here');
+        console.log('here1');
     } catch(error) {
         console.error('Database initialization error:', error);
     }
