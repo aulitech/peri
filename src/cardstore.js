@@ -170,6 +170,7 @@ async function openDatabase() { //get rid of phrases argument
             db = event.target.result;
             console.log("Database opened successfully. Version:", db.version);
             resolve(db);
+            console.log();
             if(phraseDBEmpty){
                 setDefaultPhrases();
                 phraseDBEmpty = false;
@@ -177,10 +178,13 @@ async function openDatabase() { //get rid of phrases argument
           };
         } else {
           console.log("Database already exists. Version:", db.version);
+          const isEmptyRequest = phraseStoreEmpty(db);
+          isEmptyRequest.onsuccess = (event) => {
+            console.log('event here', event.target.result);
+            setDefaultPhrases();
+            resolve(db);
+          }
           resolve(db);
-        }
-        if (phraseStoreEmpty(db)){
-            console.log('here5');
         }
         /*if(phraseStoreEmpty(database)){
             console.log('here');
