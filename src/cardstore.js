@@ -80,9 +80,29 @@ export async function savePhrases() {
     await writableStream.close();
 }
 
+async function phraseStoreEmpty(database){
+    const transaction = database.transaction(["phrases"], "readwrite");
+    const objectStore = transaction.objectStore("phrases");
+    return new Promise((resolve) => {
+        const request = objectStore.count();
+        request.onsuccess = (event) => {
+            const phraseCount = event.target.result;
+            if (phraseCount == 0){
+                resolve(true);
+            }else{
+                resolve(false);
+            }
+        }
+    });
+}
+
 export async function initializeApp(){
     try {
         const database = await openDatabase();
+        /*if(phraseStoreEmpty(database)){
+            console.log('here');
+            setDefaultPhrases();
+        }*/
         myPhrases = await getAllPhrases(database);
         handleTimeStamps(database);
         updatePhrasesfromDB();
@@ -121,6 +141,7 @@ async function openDatabase() { //get rid of phrases argument
         reject(event.target.error);
       };
       request.onsuccess = (event) => {
+        let phraseDBEmpty = false;
         db = event.target.result;
         const existingObjectStores = Array.from(db.objectStoreNames);
         console.log('object store:', existingObjectStores);
@@ -138,13 +159,10 @@ async function openDatabase() { //get rid of phrases argument
             db = event.target.result;
             if(!db.objectStoreNames.contains("phrases")){
                 db.createObjectStore("phrases", { keyPath: "phrase" });
+                phraseDBEmpty = true;
             }
             if(!db.objectStoreNames.contains("timeStamps")){
                 db.createObjectStore("timeStamps", { autoIncrement: true });
-            }
-            if (phraseStoreEmpty()) { //slight edge case that if the user deletes every phrase, it will repopulate but we can account for this with a boolean variable (come back to this)
-                console.log('heredefault');
-                setDefaultPhrases();
             }
           };
   
@@ -152,18 +170,29 @@ async function openDatabase() { //get rid of phrases argument
             db = event.target.result;
             console.log("Database opened successfully. Version:", db.version);
             resolve(db);
+            if(phraseDBEmpty){
+                setDefaultPhrases();
+                phraseDBEmpty = false;
+            }
           };
         } else {
           console.log("Database already exists. Version:", db.version);
           resolve(db);
         }
+        if (phraseStoreEmpty(db)){
+            console.log('here5');
+        }
+        /*if(phraseStoreEmpty(database)){
+            console.log('here');
+            setDefaultPhrases();
+        }*/
       };
     });
   }
 
 ////Come back and make phraseStoreEmpty more efficient!
 
-async function phraseStoreEmpty(){ //!!!!!can make efficient by just checking if the first phrase in the phrase store exists instead of loading the entire store
+/*async function phraseStoreEmpty(){ //!!!!!can make efficient by just checking if the first phrase in the phrase store exists instead of loading the entire store
     const phrases = await getAllPhrases(db)
     console.log('phrases2:', phrases);
     if (phrases.length == 0){
@@ -171,7 +200,7 @@ async function phraseStoreEmpty(){ //!!!!!can make efficient by just checking if
         return true;
     }
     return false;
-}
+}*/
 
 export async function setDefaultPhrases(){
     const transaction = db.transaction(["phrases", "timeStamps"], "readwrite");
@@ -363,6 +392,7 @@ export async function deletePhraseFromDB(phrase){
 }
 
 async function updatePhrasesfromDB(){
+    getAllTimeStamps(db);
     const newPhrases = await getSortedPhrases();
     phrases.set(newPhrases);
 }
