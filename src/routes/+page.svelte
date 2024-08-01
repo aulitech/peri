@@ -46,8 +46,7 @@
 		}
 	}
 
-	function handleAddPhrase(){
-		const userInput = document.getElementById('txt').value;
+	function handleAddPhrase(userInput = document.getElementById('txt').value){
 		addPhraseToDB(userInput);
 		addTimeStampToDB(userInput);
 	}
@@ -68,8 +67,13 @@
 		}
 	}
 
-	function HandleSetDefaults(){
+	function handleSetDefaults(){
 		setDefaultPhrases();
+	}
+
+	function handleSpeakButton(userInput = document.getElementById("txt").value){
+		speakNow(userInput);
+		handleAddPhrase(userInput);
 	}
 
 	// not easy to localize
@@ -135,7 +139,8 @@
 			if (append) searchTerm = searchTerm.concat(txt);
 			else {
 				searchTerm = txt;
-				speakNow(txt);
+				handleSpeakButton(txt);
+				//speakNow(txt);
 			}
 		}, tmr);
 	}
@@ -289,8 +294,21 @@
 						on:keydown={handleKeydown}
 					/>
 					<button
-						id="addPhraseButton"
-						class="w-40 border border-black rounded-md bg-green-500 hover:text-primary hover:bg-secondary"
+						id="speakButton"
+						class="w-40 rounded-md hover:text-primary hover:bg-secondary"
+						on:mouseleave|preventDefault={() => {
+							clearTimeout(dwellTimer);
+						}}
+						on:mouseenter|preventDefault={() => dwellF(handleSpeakButton, dwellInterval)}
+						on:click={() => {
+							clearTimeout(dwellTimer);
+							handleSpeakButton();
+							//handleAddPhrase();
+						}}
+					>Speak</button>
+					<button
+						id="saveButton"
+						class="w-40 rounded-md hover:text-primary hover:bg-secondary"
 						on:mouseleave|preventDefault={() => {
 							clearTimeout(dwellTimer);
 						}}
@@ -299,19 +317,7 @@
 							clearTimeout(dwellTimer);
 							handleAddPhrase();
 						}}
-					>Add Phrase</button>
-					<button
-						id="deletePhraseButton"
-						class="w-40 border border-black rounded-md bg-red-500 hover:text-primary hover:bg-secondary"
-						on:mouseleave|preventDefault={() => {
-							clearTimeout(dwellTimer);
-						}}
-						on:mouseenter|preventDefault={() => dwellF(handleDeletePhrase, dwellInterval)}
-						on:click={() => {
-							clearTimeout(dwellTimer);
-							handleDeletePhrase();
-						}}
-					>Delete Phrase</button>
+					>Save</button>
 				</div>
 				<!--<button
 					id="editPhraseButton"
@@ -334,7 +340,7 @@
 					on:mouseenter|preventDefault={() => dwellF(handleDeletePhrase, dwellInterval)}
 					on:click={() => {
 						clearTimeout(dwellTimer);
-						HandleSetDefaults();
+						handleSetDefaults();
 					}}
 				>Reset Defaults</button>-->
 
@@ -410,6 +416,7 @@
 				on:click={() => {
 					clearTimeout(dwellTimer);
 					searchTerm = phrase;
+					handleSpeakButton(phrase);
 					//speakNow(phrase);
 				}}
 			>
@@ -426,6 +433,7 @@
 				on:click={() => {
 					clearTimeout(dwellTimer);
 					searchTerm = phrase;
+					handleSpeakButton(phrase);
 					//speakNow(phrase);
 				}}
 			>
