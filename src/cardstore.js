@@ -340,8 +340,8 @@ export async function addPhraseToDB(phrase){
             request.onerror = (event) => {
                 console.error('Error adding phrase:', event.target.error);
             };
-            updatePhrasesfromDB();
         }
+        updatePhrasesfromDB();
 
         await new Promise((resolve, reject) => {
             transaction.oncomplete = () => resolve();
@@ -402,21 +402,6 @@ export async function getPhraseFromDB(phrase){
     //output.then(return output);
     return result;
 }
-async function isObjectStoreEmpty(db, objectStoreName) {
-    return new Promise((resolve, reject) => {
-        const transaction = db.transaction([objectStoreName], "readonly");
-
-        const countRequest = objectStore.count();
-
-        countRequest.onsuccess = (event) => {
-            resolve(event.target.result === 0);
-        };
-
-        countRequest.onerror = (event) => {
-            reject(event.target.error);
-        };
-    });
-}
 
 async function getAllPhrases(db) {
     return new Promise((resolve, reject) => {
@@ -426,12 +411,6 @@ async function getAllPhrases(db) {
 
         request.onsuccess = (event) => {
             const phrases = event.target.result.map(item => item.phrase); // Extract the 'phrase' values
-            /*
-            if (phrases.length == 0) { //populating phrases shouldn't be here!!!! I think
-                //const phraseObjectStore = event.target.transaction.objectStore("phrases");
-                populatePhrases();
-            }
-            */
             resolve(phrases);
         };
 
