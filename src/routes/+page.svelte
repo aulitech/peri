@@ -276,42 +276,44 @@
 		</div>
 		<div class="grow pr-12 flex flex-col">
 			<div class="flex space-x-2">
-				<label for="txt" />
-				<input
-					type="search"
-					id="txt"
-					name="txt"
-					class="p-2 w-full rounded-md text-3xl outline-none border-none bg-primary text-primary"
-					placeholder="Type a phrase"
-					bind:value={searchTerm}
-					size={searchTerm.length}
-					on:keydown={handleKeydown}
-				/>
-				<button
-					id="addPhraseButton"
-					class="w-40 border border-black rounded-md bg-green-500 hover:text-primary hover:bg-secondary"
-					on:mouseleave|preventDefault={() => {
-						clearTimeout(dwellTimer);
-					}}
-					on:mouseenter|preventDefault={() => dwellF(handleAddPhrase, dwellInterval)}
-					on:click={() => {
-						clearTimeout(dwellTimer);
-						handleAddPhrase();
-					}}
-				>Add Phrase</button>
-				<button
-					id="deletePhraseButton"
-					class="w-40 border border-black rounded-md bg-red-500 hover:text-primary hover:bg-secondary"
-					on:mouseleave|preventDefault={() => {
-						clearTimeout(dwellTimer);
-					}}
-					on:mouseenter|preventDefault={() => dwellF(handleDeletePhrase, dwellInterval)}
-					on:click={() => {
-						clearTimeout(dwellTimer);
-						handleDeletePhrase();
-					}}
-				>Delete Phrase</button>
-				<button
+				<div class="p-2 w-full rounded-md text-3xl outline-none border-none bg-primary text-primary">
+					<label for="txt"></label>
+					<input
+						type="search"
+						id="txt"
+						name="txt"
+						class="p-2   text-3xl outline-none border-none bg-primary text-primary"
+						placeholder="Type a phrase"
+						bind:value={searchTerm}
+						size={searchTerm.length}
+						on:keydown={handleKeydown}
+					/>
+					<button
+						id="addPhraseButton"
+						class="w-40 border border-black rounded-md bg-green-500 hover:text-primary hover:bg-secondary"
+						on:mouseleave|preventDefault={() => {
+							clearTimeout(dwellTimer);
+						}}
+						on:mouseenter|preventDefault={() => dwellF(handleAddPhrase, dwellInterval)}
+						on:click={() => {
+							clearTimeout(dwellTimer);
+							handleAddPhrase();
+						}}
+					>Add Phrase</button>
+					<button
+						id="deletePhraseButton"
+						class="w-40 border border-black rounded-md bg-red-500 hover:text-primary hover:bg-secondary"
+						on:mouseleave|preventDefault={() => {
+							clearTimeout(dwellTimer);
+						}}
+						on:mouseenter|preventDefault={() => dwellF(handleDeletePhrase, dwellInterval)}
+						on:click={() => {
+							clearTimeout(dwellTimer);
+							handleDeletePhrase();
+						}}
+					>Delete Phrase</button>
+				</div>
+				<!--<button
 					id="editPhraseButton"
 					class="w-40 border border-black rounded-md bg-yellow-500 hover:text-primary hover:bg-secondary"
 					on:mouseleave|preventDefault={() => {
@@ -334,7 +336,7 @@
 						clearTimeout(dwellTimer);
 						HandleSetDefaults();
 					}}
-				>Reset Defaults</button>
+				>Reset Defaults</button>-->
 
 			<!--<button
 				class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"
