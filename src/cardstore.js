@@ -181,21 +181,8 @@ async function openDatabase() { //get rid of phrases argument
           if(await phraseStoreEmpty(db)){
             setDefaultPhrases();
           }
-          /*const isEmptyRequest = phraseStoreEmpty(db);
-          isEmptyRequest.onsuccess = (event) => {
-            console.log('event here', event.target.result);
-            setDefaultPhrases();
-            resolve(db);
-          }
-          isEmptyRequest.onerror = (event) => {
-            error.log('emptyRequest error:', error);
-          }*/
           resolve(db);
         }
-        /*if(phraseStoreEmpty(database)){
-            console.log('here');
-            setDefaultPhrases();
-        }*/
       };
     });
   }
@@ -362,13 +349,7 @@ export async function addPhraseToDB(phrase){
         });
     } catch (error) {
         console.error("Transaction error:", error);
-        // Handle the transaction error (e.g., rollback, retry)
     }
-    //myPhrases = await getAllPhrases(db);
-    //const request = objectStore.add(phrase);
-    //request.onsuccess = (event) => {
-      //  console.log('success ' + event.target.result);
-    //}
 }
 
 export async function deletePhraseFromDB(phrase){
