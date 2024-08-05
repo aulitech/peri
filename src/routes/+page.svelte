@@ -3,6 +3,7 @@
 	import Record from '../components/record.svelte';
 	import Text from '../components/text.svelte';
 	import Speak from '../components/speak.svelte';
+	import Pause from '../components/pause.svelte';
 
 	let searchTerm = '';
 	let startsWith = [];
@@ -16,6 +17,7 @@
 	let keylength = 0;
 	initializeApp();
 	let editDeletedPhrase = null;
+	let isPaused = false;
 
 	function speakNow(txt) {
 		var msg = new SpeechSynthesisUtterance();
@@ -76,6 +78,11 @@
 		handleAddPhrase(userInput);
 	}
 
+	function togglePause() {
+        isPaused = !isPaused;
+        console.log(isPaused);
+    }
+
 	// not easy to localize
 	const kbd = [...Array(26)].map((_, i) => String.fromCharCode('a'.charCodeAt(0) + i));
 
@@ -134,20 +141,24 @@
 	];
 
 	function dwell(txt, append, tmr) {
-		clearTimeout(dwellTimer);
-		dwellTimer = setTimeout(() => {
-			if (append) searchTerm = searchTerm.concat(txt);
-			else {
-				searchTerm = txt;
-				handleSpeakButton(txt);
-				//speakNow(txt);
-			}
-		}, tmr);
+		if(!isPaused){
+			clearTimeout(dwellTimer);
+			dwellTimer = setTimeout(() => {
+				if (append) searchTerm = searchTerm.concat(txt);
+				else {
+					searchTerm = txt;
+					handleSpeakButton(txt);
+					//speakNow(txt);
+				}
+			}, tmr);
+		}
 	}
 
 	function dwellF(f, tmr) {
-		clearTimeout(dwellTimer);
-		dwellTimer = setTimeout(f, tmr);
+		if(!isPaused){
+			clearTimeout(dwellTimer);
+			dwellTimer = setTimeout(f, tmr);
+		}
 	}
 	function onlyUnique(value, index, self) {
 		return self.indexOf(value) === index;
@@ -243,6 +254,17 @@
 	<div class="w-full flex flex-row">
 		<ul class="w-full pt-4 pb-2 flex flex-row justify-evenly">
 			<li>
+				<div id="pause-div" 
+				class:bg-white={isPaused}
+				style="border-radius: 7px;"
+				on:click={() => {
+						clearTimeout(dwellTimer);
+						togglePause();
+					}}>
+					<Pause Pause={{ class: 'h-6 w-6 hover:text-primary' }} />
+				</div>
+			</li>
+			<li>
 				<Speak
 					Speak={{ text: searchTerm, timeout: dwellInterval, class: 'h-6 w-6 hover:text-primary' }}
 				/>
@@ -295,7 +317,7 @@
 					/>
 					<button
 						id="speakButton"
-						class="w-40 rounded-md hover:text-primary hover:bg-secondary"
+						class="w-40 border border-black rounded-md bg-blue-500 hover:text-primary hover:bg-secondary"
 						on:mouseleave|preventDefault={() => {
 							clearTimeout(dwellTimer);
 						}}
@@ -308,7 +330,7 @@
 					>Speak</button>
 					<button
 						id="saveButton"
-						class="w-40 rounded-md hover:text-primary hover:bg-secondary"
+						class="w-40 border border-black rounded-md bg-green-500 hover:text-primary hover:bg-secondary"
 						on:mouseleave|preventDefault={() => {
 							clearTimeout(dwellTimer);
 						}}
