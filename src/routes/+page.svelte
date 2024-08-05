@@ -83,6 +83,12 @@
         console.log(isPaused);
     }
 
+	function handleClick(event){
+		if (event.button === 2){ //right click
+			handleDeletePhrase()
+		}
+	}
+
 	// not easy to localize
 	const kbd = [...Array(26)].map((_, i) => String.fromCharCode('a'.charCodeAt(0) + i));
 
@@ -314,6 +320,7 @@
 						bind:value={searchTerm}
 						size={searchTerm.length}
 						on:keydown={handleKeydown}
+						on:contextmenu|preventDefault={handleClick}
 					/>
 					<button
 						id="speakButton"
