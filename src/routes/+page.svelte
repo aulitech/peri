@@ -381,7 +381,7 @@
 			</div>
 		</div>
 	</div>
-	<div class="p-2 flex flex-row justify-evenly text-primary" style="flex-wrap: wrap; width: 70%">
+	<div class="p-2 flex flex-row justify-evenly text-primary" style="width: 90%">
 		{#each leftKeys as key}
 			<button
 				class="text-2xl w-[3rem] text-secondary hover:text-primary"
