@@ -18,6 +18,7 @@
 	initializeApp();
 	let editDeletedPhrase = null;
 	let isPaused = false;
+	let undoShown = false;
 
 	function speakNow(txt) {
 		var msg = new SpeechSynthesisUtterance();
@@ -69,6 +70,10 @@
 		}
 	}
 
+	function handleUndo(){
+		console.log('here');
+	}
+
 	function handleSetDefaults(){
 		setDefaultPhrases();
 	}
@@ -84,9 +89,10 @@
     }
 
 	function handleClick(event){
-		if (event.button === 2){ //right click
+		if (event.button === 2 && event.target.id == "txt"){ //right click
 			handleDeletePhrase()
 		}
+		undoShown
 	}
 
 	// not easy to localize
@@ -255,47 +261,159 @@
 <svelte:head>
 	<title>Peri</title>
 </svelte:head>
+<div class="click-container"
+	on:click={() => {
+		console.log('heyo');
+	}}>
+	<div class="bg-tertiary flex flex-col overflow-hidden">
+		<div class="w-full flex flex-row">
+			<ul class="w-full pt-4 pb-2 flex flex-row justify-evenly">
+				<li>
+					<div id="pause-div" 
+					class:bg-white={isPaused}
+					style="border-radius: 7px;"
+					on:click={() => {
+							clearTimeout(dwellTimer);
+							togglePause();
+						}}>
+						<Pause Pause={{ class: 'h-6 w-6 hover:text-primary' }} />
+					</div>
+				</li>
+				<li>
+					<Speak
+						Speak={{ text: searchTerm, timeout: dwellInterval, class: 'h-6 w-6 hover:text-primary' }}
+					/>
+				</li>
+				<li><Record Record={{ class: 'h-6 w-6 hover:text-primary' }} /></li>
+				<li><Text Text={{ class: 'h-6 w-6 hover:text-primary' }} /></li>
+				<li>
+					<button
+						class="w-[3rem] pl-3 text-secondary hover:text-primary"
+						on:click={() => {
+							clearTimeout(dwellTimer);
+							savePhrases();
+						}}>Save</button
+					>
+				</li>
+				<li>
+					<button class="" on:click={() => fs.f()}> {@html fs.display}</button>
+				</li>
+			</ul>
+		</div>
+		<div class="flex flex-row">
+			<div class="flex flex-row justify-center ">
+				{#each reset as key}
+					<button
+						class="w-[3rem] pl-3 text-secondary hover:text-primary"
+						on:mouseleave|preventDefault={() => {
+							clearTimeout(dwellTimer);
+						}}
+						on:mouseenter|preventDefault={() => dwellF(key.f, dwellInterval)}
+						on:click={() => {
+							clearTimeout(dwellTimer);
+							key.f();
+						}}>{@html key.display}</button
+					>
+				{/each}
+			</div>
+			<div class="grow pr-12 flex flex-col">
+				<div class="flex space-x-2">
+					<div class="p-2 w-full rounded-md text-3xl outline-none border-none bg-primary text-primary">
+						<label for="txt"></label>
+						<input
+							type="search"
+							id="txt"
+							name="txt"
+							class="p-2   text-3xl outline-none border-none bg-primary text-primary"
+							placeholder="Type a phrase"
+							bind:value={searchTerm}
+							size={searchTerm.length}
+							on:keydown={handleKeydown}
+							on:contextmenu|preventDefault={handleClick}
+						/>
+						<button
+							id="speakButton"
+							class="w-40 border border-black rounded-md bg-blue-500 hover:text-primary hover:bg-secondary"
+							on:mouseleave|preventDefault={() => {
+								clearTimeout(dwellTimer);
+							}}
+							on:mouseenter|preventDefault={() => dwellF(handleSpeakButton, dwellInterval)}
+							on:click={() => {
+								clearTimeout(dwellTimer);
+								handleSpeakButton();
+								//handleAddPhrase();
+							}}
+						>Speak</button>
+						<button
+							id="saveButton"
+							class="w-40 border border-black rounded-md bg-green-500 hover:text-primary hover:bg-secondary"
+							on:mouseleave|preventDefault={() => {
+								clearTimeout(dwellTimer);
+							}}
+							on:mouseenter|preventDefault={() => dwellF(handleAddPhrase, dwellInterval)}
+							on:click={() => {
+								clearTimeout(dwellTimer);
+								handleAddPhrase();
+							}}
+						>Save</button>
+						{#if undoShown}
+							<button
+							id="undoButton"
+							class="w-40 border border-black rounded-md bg-green-500 hover:text-primary hover:bg-secondary"
+							on:mouseleave|preventDefault={() => {
+								clearTimeout(dwellTimer);
+							}}
+							on:mouseenter|preventDefault={() => dwellF(handleAddPhrase, dwellInterval)}
+							on:click={() => {
+								clearTimeout(dwellTimer);
+								handleUndo();
+							}}>Undo Button</button>
+						{/if}
+					</div>
+					<!--<button
+						id="editPhraseButton"
+						class="w-40 border border-black rounded-md bg-yellow-500 hover:text-primary hover:bg-secondary"
+						on:mouseleave|preventDefault={() => {
+							clearTimeout(dwellTimer);
+						}}
+						on:mouseenter|preventDefault={() => dwellF(handleDeletePhrase, dwellInterval)}
+						on:click={() => {
+							clearTimeout(dwellTimer);
+							handleEditPhrase();
+						}}
+					>Edit Phrase</button>
+					<button
+						id="defaultsButton"
+						class="w-40 border border-black rounded-md bg-yellow-500 hover:text-primary hover:bg-secondary"
+						on:mouseleave|preventDefault={() => {
+							clearTimeout(dwellTimer);
+						}}
+						on:mouseenter|preventDefault={() => dwellF(handleDeletePhrase, dwellInterval)}
+						on:click={() => {
+							clearTimeout(dwellTimer);
+							handleSetDefaults();
+						}}
+					>Reset Defaults</button>-->
 
-<div class="bg-tertiary flex flex-col overflow-hidden">
-	<div class="w-full flex flex-row">
-		<ul class="w-full pt-4 pb-2 flex flex-row justify-evenly">
-			<li>
-				<div id="pause-div" 
-				class:bg-white={isPaused}
-				style="border-radius: 7px;"
-				on:click={() => {
+				<!--<button
+					class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"
+					on:mouseleave|preventDefault={() => {
 						clearTimeout(dwellTimer);
-						togglePause();
-					}}>
-					<Pause Pause={{ class: 'h-6 w-6 hover:text-primary' }} />
-				</div>
-			</li>
-			<li>
-				<Speak
-					Speak={{ text: searchTerm, timeout: dwellInterval, class: 'h-6 w-6 hover:text-primary' }}
-				/>
-			</li>
-			<li><Record Record={{ class: 'h-6 w-6 hover:text-primary' }} /></li>
-			<li><Text Text={{ class: 'h-6 w-6 hover:text-primary' }} /></li>
-			<li>
-				<button
-					class="w-[3rem] pl-3 text-secondary hover:text-primary"
+					}}
+					on:mouseenter|preventDefault={() => dwell(key, true, dwellInterval)}
 					on:click={() => {
 						clearTimeout(dwellTimer);
-						savePhrases();
-					}}>Save</button
-				>
-			</li>
-			<li>
-				<button class="" on:click={() => fs.f()}> {@html fs.display}</button>
-			</li>
-		</ul>
-	</div>
-	<div class="flex flex-row">
-		<div class="flex flex-row justify-center ">
-			{#each reset as key}
+						searchTerm = searchTerm.concat(key);
+					}}>{@html key}</button
+				>-->
+
+				</div>
+			</div>
+		</div>
+		<div class="p-2 flex flex-row justify-evenly text-primary" style="width: 90%">
+			{#each leftKeys as key}
 				<button
-					class="w-[3rem] pl-3 text-secondary hover:text-primary"
+					class="text-2xl w-[3rem] text-secondary hover:text-primary"
 					on:mouseleave|preventDefault={() => {
 						clearTimeout(dwellTimer);
 					}}
@@ -306,183 +424,88 @@
 					}}>{@html key.display}</button
 				>
 			{/each}
-		</div>
-		<div class="grow pr-12 flex flex-col">
-			<div class="flex space-x-2">
-				<div class="p-2 w-full rounded-md text-3xl outline-none border-none bg-primary text-primary">
-					<label for="txt"></label>
-					<input
-						type="search"
-						id="txt"
-						name="txt"
-						class="p-2   text-3xl outline-none border-none bg-primary text-primary"
-						placeholder="Type a phrase"
-						bind:value={searchTerm}
-						size={searchTerm.length}
-						on:keydown={handleKeydown}
-						on:contextmenu|preventDefault={handleClick}
-					/>
-					<button
-						id="speakButton"
-						class="w-40 border border-black rounded-md bg-blue-500 hover:text-primary hover:bg-secondary"
-						on:mouseleave|preventDefault={() => {
-							clearTimeout(dwellTimer);
-						}}
-						on:mouseenter|preventDefault={() => dwellF(handleSpeakButton, dwellInterval)}
-						on:click={() => {
-							clearTimeout(dwellTimer);
-							handleSpeakButton();
-							//handleAddPhrase();
-						}}
-					>Speak</button>
-					<button
-						id="saveButton"
-						class="w-40 border border-black rounded-md bg-green-500 hover:text-primary hover:bg-secondary"
-						on:mouseleave|preventDefault={() => {
-							clearTimeout(dwellTimer);
-						}}
-						on:mouseenter|preventDefault={() => dwellF(handleAddPhrase, dwellInterval)}
-						on:click={() => {
-							clearTimeout(dwellTimer);
-							handleAddPhrase();
-						}}
-					>Save</button>
-				</div>
-				<!--<button
-					id="editPhraseButton"
-					class="w-40 border border-black rounded-md bg-yellow-500 hover:text-primary hover:bg-secondary"
-					on:mouseleave|preventDefault={() => {
-						clearTimeout(dwellTimer);
-					}}
-					on:mouseenter|preventDefault={() => dwellF(handleDeletePhrase, dwellInterval)}
-					on:click={() => {
-						clearTimeout(dwellTimer);
-						handleEditPhrase();
-					}}
-				>Edit Phrase</button>
+			{#each kbd as key}
 				<button
-					id="defaultsButton"
-					class="w-40 border border-black rounded-md bg-yellow-500 hover:text-primary hover:bg-secondary"
+					class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"
 					on:mouseleave|preventDefault={() => {
 						clearTimeout(dwellTimer);
 					}}
-					on:mouseenter|preventDefault={() => dwellF(handleDeletePhrase, dwellInterval)}
+					on:mouseenter|preventDefault={() => dwell(key, true, dwellInterval)}
 					on:click={() => {
 						clearTimeout(dwellTimer);
-						handleSetDefaults();
+						searchTerm = searchTerm.concat(key);
+					}}>{@html key}</button
+				>
+			{/each}
+		</div>
+
+		<div class="max-h-24 flex flex-row flex-wrap overflow-hidden">
+			{#each starters as prediction}
+				<button
+					class="pl-4 pr-4 pt-2 pb-2 min-w-[4rem] rounded-full text-2xl text-tertiary hover:text-primary hover:bg-secondary"
+					on:mouseleave|preventDefault={() => {
+						clearTimeout(dwellTimer);
 					}}
-				>Reset Defaults</button>-->
-
-			<!--<button
-				class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"
-				on:mouseleave|preventDefault={() => {
-					clearTimeout(dwellTimer);
-				}}
-				on:mouseenter|preventDefault={() => dwell(key, true, dwellInterval)}
-				on:click={() => {
-					clearTimeout(dwellTimer);
-					searchTerm = searchTerm.concat(key);
-				}}>{@html key}</button
-			>-->
-
-			</div>
+					on:mouseenter|preventDefault={() => dwell(prediction[0] + ' ', true, dwellInterval)}
+					on:click={() => {
+						clearTimeout(dwellTimer);
+						searchTerm = searchTerm + prediction[0] + ' ';
+					}}>{prediction[0]}</button
+				>
+			{/each}
 		</div>
 	</div>
-	<div class="p-2 flex flex-row justify-evenly text-primary" style="width: 90%">
-		{#each leftKeys as key}
-			<button
-				class="text-2xl w-[3rem] text-secondary hover:text-primary"
-				on:mouseleave|preventDefault={() => {
-					clearTimeout(dwellTimer);
-				}}
-				on:mouseenter|preventDefault={() => dwellF(key.f, dwellInterval)}
-				on:click={() => {
-					clearTimeout(dwellTimer);
-					key.f();
-				}}>{@html key.display}</button
-			>
-		{/each}
-		{#each kbd as key}
-			<button
-				class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"
-				on:mouseleave|preventDefault={() => {
-					clearTimeout(dwellTimer);
-				}}
-				on:mouseenter|preventDefault={() => dwell(key, true, dwellInterval)}
-				on:click={() => {
-					clearTimeout(dwellTimer);
-					searchTerm = searchTerm.concat(key);
-				}}>{@html key}</button
-			>
-		{/each}
+	<div class="flex max-h-[70vh] w-full flex-col bg-secondary justify-center">
+		<div class="w-full p-8 flex flex-row flex-wrap gap-2 overflow-y-auto">
+			{#each startsWith as phrase}
+				<p
+					class="p-4 text-2xl rounded-lg text-tertiary hover:bg-tertiary hover:text-primary hover:text-4xl w-80 sm:w-[90%] md:w-60 "
+					on:mouseleave|preventDefault={() => {
+						clearTimeout(dwellTimer);
+					}}
+					on:mouseenter|preventDefault={() => dwell(phrase, false, dwellInterval)}
+					on:click={() => {
+						clearTimeout(dwellTimer);
+						searchTerm = phrase;
+						handleSpeakButton(phrase);
+						//speakNow(phrase);
+					}}
+				>
+					{phrase}
+				</p>
+			{/each}
+			{#each contains as phrase}
+				<p
+					class="p-4 italic text-2xl rounded-lg text-tertiary hover:bg-tertiary hover:text-primary hover:text-4xl w-80 sm:w-[90%] md:w-60"
+					on:mouseleave|preventDefault={() => {
+						clearTimeout(dwellTimer);
+					}}
+					on:mouseenter|preventDefault={() => dwell(phrase, false, dwellInterval)}
+					on:click={() => {
+						clearTimeout(dwellTimer);
+						searchTerm = phrase;
+						handleSpeakButton(phrase);
+						//speakNow(phrase);
+					}}
+				>
+					{phrase}
+				</p>
+			{/each}
+		</div>
 	</div>
 
-	<div class="max-h-24 flex flex-row flex-wrap overflow-hidden">
-		{#each starters as prediction}
+	<footer
+		class="h-[8%] w-full min-h-12 bg-primary fixed left-0 bottom-0 p-4 flex flex-row justify-evenly items-center"
+	>
+		{#each ['Bathroom', 'Food', 'Pain', 'Help'] as lbl}
 			<button
-				class="pl-4 pr-4 pt-2 pb-2 min-w-[4rem] rounded-full text-2xl text-tertiary hover:text-primary hover:bg-secondary"
-				on:mouseleave|preventDefault={() => {
-					clearTimeout(dwellTimer);
-				}}
-				on:mouseenter|preventDefault={() => dwell(prediction[0] + ' ', true, dwellInterval)}
-				on:click={() => {
-					clearTimeout(dwellTimer);
-					searchTerm = searchTerm + prediction[0] + ' ';
-				}}>{prediction[0]}</button
+				type="button"
+				class="p-2 font-bold text-md rounded-md shadow-md hover:bg-tertiary hover:shadow-lg transition duration-150 ease-in-out"
+				>{lbl}</button
 			>
 		{/each}
-	</div>
+	</footer>
 </div>
-<div class="flex max-h-[70vh] w-full flex-col bg-secondary justify-center">
-	<div class="w-full p-8 flex flex-row flex-wrap gap-2 overflow-y-auto">
-		{#each startsWith as phrase}
-			<p
-				class="p-4 text-2xl rounded-lg text-tertiary hover:bg-tertiary hover:text-primary hover:text-4xl w-80 sm:w-[90%] md:w-60 "
-				on:mouseleave|preventDefault={() => {
-					clearTimeout(dwellTimer);
-				}}
-				on:mouseenter|preventDefault={() => dwell(phrase, false, dwellInterval)}
-				on:click={() => {
-					clearTimeout(dwellTimer);
-					searchTerm = phrase;
-					handleSpeakButton(phrase);
-					//speakNow(phrase);
-				}}
-			>
-				{phrase}
-			</p>
-		{/each}
-		{#each contains as phrase}
-			<p
-				class="p-4 italic text-2xl rounded-lg text-tertiary hover:bg-tertiary hover:text-primary hover:text-4xl w-80 sm:w-[90%] md:w-60"
-				on:mouseleave|preventDefault={() => {
-					clearTimeout(dwellTimer);
-				}}
-				on:mouseenter|preventDefault={() => dwell(phrase, false, dwellInterval)}
-				on:click={() => {
-					clearTimeout(dwellTimer);
-					searchTerm = phrase;
-					handleSpeakButton(phrase);
-					//speakNow(phrase);
-				}}
-			>
-				{phrase}
-			</p>
-		{/each}
-	</div>
-</div>
-
-<footer
-	class="h-[8%] w-full min-h-12 bg-primary fixed left-0 bottom-0 p-4 flex flex-row justify-evenly items-center"
->
-	{#each ['Bathroom', 'Food', 'Pain', 'Help'] as lbl}
-		<button
-			type="button"
-			class="p-2 font-bold text-md rounded-md shadow-md hover:bg-tertiary hover:shadow-lg transition duration-150 ease-in-out"
-			>{lbl}</button
-		>
-	{/each}
-</footer>
 
 <style>
 </style>
