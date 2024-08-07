@@ -4,6 +4,7 @@
 	import Text from '../components/text.svelte';
 	import Speak from '../components/speak.svelte';
 	import Pause from '../components/pause.svelte';
+	import { onMount } from 'svelte';
 
 	let searchTerm = '';
 	let startsWith = [];
@@ -19,6 +20,35 @@
 	let editDeletedPhrase = null;
 	let isPaused = false;
 	let undoShown = false;
+	let initialUndoClick = false;
+
+    // Function to show the undo button (you'll likely call this when a phrase is added)
+    function showUndoButton() {
+        undoShown = true;
+    }
+
+    // Function to handle clicks anywhere on the page
+    let handleClickOutside;
+
+    onMount(() => {
+        handleClickOutside = (event) => {
+			console.log(event.target)
+            const clickedElement = event.target;
+            const undoButton = document.getElementById('undoButton'); // Get the undo button element
+			console.log(undoButton);
+            if (undoButton && !undoButton.contains(clickedElement) && !initialUndoClick) { // Check if click is outside the button
+				undoShown = false;
+            } else if (undoButton && !undoButton.contains(clickedElement) && initialUndoClick) {
+				initialUndoClick = false;
+			}
+        }
+
+        window.addEventListener('click', handleClickOutside);
+
+        return () => {
+            window.removeEventListener('click', handleClickOutside);
+        };
+    });
 
 	function speakNow(txt) {
 		var msg = new SpeechSynthesisUtterance();
@@ -52,6 +82,9 @@
 	function handleAddPhrase(userInput = document.getElementById('txt').value){
 		addPhraseToDB(userInput);
 		addTimeStampToDB(userInput);
+		undoShown = true;
+		initialUndoClick = true;
+		console.log('now here');
 	}
 
 	function handleDeletePhrase(){
@@ -89,10 +122,14 @@
     }
 
 	function handleClick(event){
+        /*const undoButton = document.getElementById('undoButton');
+		console.log(undoButton);
+		if (undoButton) {
+			undoShown = false;
+		}*/
 		if (event.button === 2 && event.target.id == "txt"){ //right click
 			handleDeletePhrase()
 		}
-		undoShown
 	}
 
 	// not easy to localize
@@ -262,8 +299,8 @@
 	<title>Peri</title>
 </svelte:head>
 <div class="click-container"
-	on:click={() => {
-		console.log('heyo');
+	on:click={(event) => {
+		handleClick(event);
 	}}>
 	<div class="bg-tertiary flex flex-col overflow-hidden">
 		<div class="w-full flex flex-row">
@@ -359,7 +396,7 @@
 						{#if undoShown}
 							<button
 							id="undoButton"
-							class="w-40 border border-black rounded-md bg-green-500 hover:text-primary hover:bg-secondary"
+							class="w-40 border border-black rounded-md hover:text-primary hover:bg-secondary"
 							on:mouseleave|preventDefault={() => {
 								clearTimeout(dwellTimer);
 							}}
