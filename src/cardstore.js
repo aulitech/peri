@@ -16,6 +16,7 @@ let counts = {}
 
 const dbName = 'MyTestDatabase';
 let db;
+let lastTimeStampKey;
 
 function onlyUnique(value, index, self) {
     return self.indexOf(value) === index;
@@ -106,7 +107,6 @@ export async function initializeApp(){
         myPhrases = await getAllPhrases(database);
         handleTimeStamps(database);
         updatePhrasesfromDB();
-        console.log('here1');
     } catch(error) {
         console.error('Database initialization error:', error);
     }
@@ -144,7 +144,6 @@ async function openDatabase() { //get rid of phrases argument
         let phraseDBEmpty = false;
         db = event.target.result;
         const existingObjectStores = Array.from(db.objectStoreNames);
-        console.log('object store:', existingObjectStores);
         if (!existingObjectStores.includes("phrases") || !existingObjectStores.includes("timeStamps")) {
           db.close(); // Close the current connection
           const upgradeRequest = indexedDB.open(dbName, db.version + 1); // Increment the version to trigger onupgradeneeded
@@ -170,7 +169,6 @@ async function openDatabase() { //get rid of phrases argument
             db = event.target.result;
             console.log("Database opened successfully. Version:", db.version);
             resolve(db);
-            console.log();
             if(phraseDBEmpty){
                 setDefaultPhrases();
                 phraseDBEmpty = false;
@@ -244,7 +242,6 @@ async function getAllTimeStamps(db, maxAgeDays = 7) {
         const request = timeStampStore.getAll();
         request.onsuccess = async (event) => {
             let timeStamps = event.target.result;
-            console.log('time stamps: ', timeStamps);
             const expirationTimestamp = Date.now() - maxAgeDays * 24 * 60 * 60 * 1000;
             
             for (let i = 0; i < timeStamps.length; i++){
@@ -262,17 +259,15 @@ async function getAllTimeStamps(db, maxAgeDays = 7) {
                         const phraseRequest = phraseStore.get(timeStampId.phrase);
                         phraseRequest.onsuccess = (event) => {
                             const existingPhrase = event.target.result;
-                            console.log(existingPhrase); 
                             if (existingPhrase) {
-                            const timeElapsed = Date.now() - timeStampId.timeStamp;
-                            const maxWeightAge = maxAgeDays * 24 * 60 * 60 * 1000;
-                            //const weight = Math.max(0, (maxWeightAge - timeElapsed) / maxWeightAge);
-                            const weight = 1 / (Date.now() - timeStampId.timeStamp + 1);
-                            console.log('this phrase:', existingPhrase);
-                            existingPhrase.weight = (existingPhrase.weight || 0) + weight;
-                            phraseStore.put(existingPhrase); // Update the existing object 
-                            //updatedPhrases.push(existingPhrase);
-                            console.log("Phrase weight updated:", existingPhrase.phrase, existingPhrase.weight);
+                                const timeElapsed = Date.now() - timeStampId.timeStamp;
+                                const maxWeightAge = maxAgeDays * 24 * 60 * 60 * 1000;
+                                //const weight = Math.max(0, (maxWeightAge - timeElapsed) / maxWeightAge);
+                                const weight = 1 / (Date.now() - timeStampId.timeStamp + 1);
+                                existingPhrase.weight = (existingPhrase.weight || 0) + weight;
+                                phraseStore.put(existingPhrase); // Update the existing object 
+                                //updatedPhrases.push(existingPhrase);
+                                //console.log("Phrase weight updated:", existingPhrase.phrase, existingPhrase.weight);
                             }
                         }
                     } catch (error) {
@@ -287,12 +282,19 @@ async function getAllTimeStamps(db, maxAgeDays = 7) {
     });
 }
 
-export async function addTimeStampToDB(phrase){
+export function addPhrase(phrase) {
+    addPhraseToDB(phrase);
+    addTimeStampToDB(phrase);
+}
+
+async function addTimeStampToDB(phrase){
     const transaction = db.transaction(["timeStamps"], "readwrite");
     const timeStampStore = transaction.objectStore("timeStamps");
     const timeStamp = Date.now();
     const addRequest = timeStampStore.add({ timeStamp: timeStamp, phrase: phrase });
     addRequest.onsuccess = (event) => {
+        lastTimeStampKey = event.target.result;
+        console.log('key', lastTimeStampKey);
         console.log('Timestamp added:', timeStampStore);
     }
     addRequest.onerror = (event) => {
@@ -318,7 +320,7 @@ async function resetPhraseWeights(db) {
     }
 }
 
-export async function addPhraseToDB(phrase){
+async function addPhraseToDB(phrase){
     const transaction = db.transaction(["phrases"], "readwrite");
     const objectStore = transaction.objectStore("phrases");
     try {
@@ -382,6 +384,77 @@ export async function deletePhraseFromDB(phrase){
     }
 }
 
+async function getObjectFromStore(objectStore, objectKey) {
+    return new Promise((resolve, reject) => {
+        const objectRequest = objectStore.get(objectKey);
+        objectRequest.onsuccess = (event) => {
+            resolve(event.target.result);
+        }
+        objectRequest.onerror = (event) => {
+            reject(event.target.error);
+        }
+    });
+}
+
+export async function undoAddPhrase() {
+    const transaction = db.transaction(["phrases", "timeStamps"], "readwrite");
+    const phraseStore = transaction.objectStore("phrases");
+    const timeStampStore = transaction.objectStore("timeStamps");
+    try {
+        const lastTimeStamp = await getObjectFromStore(timeStampStore, lastTimeStampKey);
+        console.log('phrases1', await getAllOfStore(phraseStore));
+
+        const phraseRequest = phraseStore.get(lastTimeStamp.phrase);
+        phraseRequest.onsuccess = (event) => {
+            const existingPhrase = event.target.result;
+            console.log(existingPhrase); 
+            if (existingPhrase && existingPhrase.frequency > 1) {
+                existingPhrase.frequency -= 1
+                phraseStore.put(existingPhrase);
+                console.log("Phrase frequency updated:", existingPhrase.phrase, existingPhrase.frequency);
+            } else if(existingPhrase && existingPhrase.frequency <= 1) {
+                phraseStore.delete(existingPhrase.phrase);
+                console.log('phraseDeleted', existingPhrase);
+            }
+        }
+    } catch (error) {
+        console.error("Transaction error:", error);
+    }
+    console.log('1bro', await getAllOfStore(timeStampStore));
+    await timeStampStore.delete(lastTimeStampKey);
+    console.log('2bro', await getAllOfStore(timeStampStore));
+    lastTimeStampKey = null;
+    console.log('phrases2', await getAllOfStore(phraseStore));
+    updatePhrasesfromDB();
+}
+
+async function getAllOfStore(objectStore) {
+    return new Promise((resolve, reject) => {
+        const request = objectStore.getAll();
+        
+        request.onsuccess = (event) => {
+            resolve(event.target.result);
+        }
+        request.onerror = (event) => {
+            reject(event.target.error);
+        }
+    });
+}
+
+async function getCountOfObjectStore(objectStore) {
+    return new Promise((resolve, reject) => {
+        const countRequest = objectStore.count();
+
+        countRequest.onsuccess = (event) => {
+            resolve(event.target.result);
+        }
+
+        countRequest.onerror = (event) => {
+            reject(event.target.error);
+        }
+    });
+}
+
 async function updatePhrasesfromDB(){
     getAllTimeStamps(db);
     const newPhrases = await getSortedPhrases();
@@ -394,8 +467,7 @@ export async function getPhraseFromDB(phrase){
         db.transaction("phrases")
         .objectStore("phrases")
         .get(phrase).onsuccess = (event) => {
-            result = event.target.result;    
-            console.log(result);  
+            result = event.target.result; 
             resolve(result);
         }
     });
@@ -428,7 +500,6 @@ async function getAllPhraseFrequencies(db) {
 
         request.onsuccess = (event) => {
             const phrases = event.target.result; // Extract the 'phrase' values
-            console.log('phrases1:',phrases);
             /*
             if (phrases.length == 0) { //populating phrases shouldn't be here!!!! I think
                 //const phraseObjectStore = event.target.transaction.objectStore("phrases");

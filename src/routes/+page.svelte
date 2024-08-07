@@ -1,5 +1,5 @@
 <script>
-	import { fetchCards, phrases, savePhrases, initializeApp, getPhraseFromDB, deletePhraseFromDB, addPhraseToDB, setDefaultPhrases, addTimeStampToDB } from '../cardstore';
+	import { fetchCards, phrases, savePhrases, initializeApp, undoAddPhrase, getPhraseFromDB, deletePhraseFromDB, addPhrase, setDefaultPhrases } from '../cardstore';
 	import Record from '../components/record.svelte';
 	import Text from '../components/text.svelte';
 	import Speak from '../components/speak.svelte';
@@ -18,7 +18,7 @@
 	let keylength = 0;
 	initializeApp();
 	let editDeletedPhrase = null;
-	let isPaused = false;
+	let isPaused = true;
 	let undoShown = false;
 	let initialUndoClick = false;
 
@@ -32,10 +32,8 @@
 
     onMount(() => {
         handleClickOutside = (event) => {
-			console.log(event.target)
             const clickedElement = event.target;
             const undoButton = document.getElementById('undoButton'); // Get the undo button element
-			console.log(undoButton);
             if (undoButton && !undoButton.contains(clickedElement) && !initialUndoClick) { // Check if click is outside the button
 				undoShown = false;
             } else if (undoButton && !undoButton.contains(clickedElement) && initialUndoClick) {
@@ -80,11 +78,9 @@
 	}
 
 	function handleAddPhrase(userInput = document.getElementById('txt').value){
-		addPhraseToDB(userInput);
-		addTimeStampToDB(userInput);
+		addPhrase(userInput);
 		undoShown = true;
 		initialUndoClick = true;
-		console.log('now here');
 	}
 
 	function handleDeletePhrase(){
@@ -104,7 +100,8 @@
 	}
 
 	function handleUndo(){
-		console.log('here');
+		undoAddPhrase();
+		undoShown = false;
 	}
 
 	function handleSetDefaults(){
@@ -400,7 +397,7 @@
 							on:mouseleave|preventDefault={() => {
 								clearTimeout(dwellTimer);
 							}}
-							on:mouseenter|preventDefault={() => dwellF(handleAddPhrase, dwellInterval)}
+							on:mouseenter|preventDefault={() => dwellF(handleUndo, dwellInterval)}
 							on:click={() => {
 								clearTimeout(dwellTimer);
 								handleUndo();
