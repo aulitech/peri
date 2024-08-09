@@ -6,7 +6,6 @@ let ngramModel;
 let trigramFrequencies;
 const subtitlePhrases = await readSubtitlesFromFile();
 await initializeModel(subtitlePhrases);
-//console.log('model', ngramModel)
 console.log('predictions', getPredictions('bro you cant count him'));
 
 async function readSubtitlesFromFile() {
@@ -16,44 +15,10 @@ async function readSubtitlesFromFile() {
     } catch (error) {
       console.error('Error reading subtitles from file:', error);
     }
-  }
+}
 
-/*async function fetchSubtitlesFromFile() {
-    console.log('why here?')
-    const url = '/en.txt'; // Adjust the path if needed
-    const chunkSize = 1024 * 1024; // 1MB chunks (adjust as needed)
-  
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-  
-      const reader = response.body.getReader(); 
-  
-      let subtitleText = '';
-      let done, value;
-  
-      while (!(done && value === undefined)) {
-        ({ done, value } = await reader.read());
-        if (value) {
-          subtitleText += new TextDecoder("utf-8").decode(value); // Decode the chunk
-  
-          // Process the chunk immediately or accumulate for later processing
-          const extractedPhrases = extractPhrases(subtitleText);
-          console.log(extractedPhrases);
-          // ... (Do something with the extracted phrases, e.g., add to IndexedDB)
-        }
-      }
-  
-      return subtitleText; // Or return the accumulated extracted phrases
-    } catch (error) {
-      console.error('Error fetching subtitles:', error);
-      // Handle the error appropriately
-    }
-}*/
-
-async function initializeModel(phrases) {
+export async function initializeModel(phrases) {
+    console.log("Initializing Model...")
     const trigramFunction = new ngram.nGram(3); // Create a trigram model (n=3)
 
     const trigrams = extractPhrases(phrases);
@@ -72,15 +37,10 @@ async function initializeModel(phrases) {
         const currentCount = continuationsMap.get(continuation) || 0;
         continuationsMap.set(continuation, currentCount + 1);
     }
-    //console.log(trigramFrequencies);
 }
 
 function extractPhrases(text) {
-    // 1. Split the text into lines (phrases) based on newline characters
     const lines = text.split('\n'); 
-  
-    // 2. Process each line separately
-    const trigramFunction = ngram.nGram(3);
     let allTrigrams = [];
     for (const line of lines) {
       const words = line.trim().split(/\s+/); // Split on whitespace and trim

@@ -17,7 +17,6 @@
 	let dwellInterval = 1000;
 	let searchKey = '';
 	let keylength = 0;
-	initializeApp();
 	let editDeletedPhrase = null;
 	let isPaused = true;
 	let undoShown = false;
@@ -32,6 +31,7 @@
     let handleClickOutside;
 
     onMount(() => {
+		initializeApp();
         handleClickOutside = (event) => {
             const clickedElement = event.target;
             const undoButton = document.getElementById('undoButton'); // Get the undo button element

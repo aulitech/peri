@@ -8,7 +8,6 @@ let myPhrases = data.phrases.map(makePhrases);
 myPhrases = myPhrases.sort().map(phrase => phrase.trim()).filter(onlyUnique);
 let defaultPhrases = data.phrases.map(makePhrases);
 defaultPhrases = myPhrases.sort().map(phrase => phrase.trim()).filter(onlyUnique);
-let phraseSet = new Set(myPhrases);
 
 let aliases = []
 let starters = []
@@ -25,15 +24,6 @@ function onlyUnique(value, index, self) {
 export const fetchCards = async() => {
     if (loaded) return;
     aliases = data.aliases
-
-    //myPhrases = data.phrases.map(makePhrases)
-
-    // Create the phrase table
-
-    //myPhrases = myPhrases.sort().map(phrase => phrase.trim()).filter(onlyUnique)
-
-        // Create a new table with just the first three words
-    
     starters = myPhrases.map(phrase => phrase.split(' ').slice(0, 1).join(' '))
         // Determine the frequency of each Starter
     counts = starters.reduce(function(acc, key) {
@@ -184,18 +174,6 @@ async function openDatabase() { //get rid of phrases argument
       };
     });
   }
-
-////Come back and make phraseStoreEmpty more efficient!
-
-/*async function phraseStoreEmpty(){ //!!!!!can make efficient by just checking if the first phrase in the phrase store exists instead of loading the entire store
-    const phrases = await getAllPhrases(db)
-    console.log('phrases2:', phrases);
-    if (phrases.length == 0){
-        console.log('bro cmon');
-        return true;
-    }
-    return false;
-}*/
 
 export async function setDefaultPhrases(){
     const transaction = db.transaction(["phrases", "timeStamps"], "readwrite");
@@ -501,12 +479,6 @@ async function getAllPhraseFrequencies(db) {
 
         request.onsuccess = (event) => {
             const phrases = event.target.result; // Extract the 'phrase' values
-            /*
-            if (phrases.length == 0) { //populating phrases shouldn't be here!!!! I think
-                //const phraseObjectStore = event.target.transaction.objectStore("phrases");
-                populatePhrases();
-            }
-            */
             resolve(phrases);
         };
 
