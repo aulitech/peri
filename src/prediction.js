@@ -1,14 +1,15 @@
 import * as ngram from 'n-gram';
 import fs from 'fs';
 import path from 'path';
+import { openSubtitleDatabase } from './database';
 
 let ngramModel;
 let trigramFrequencies;
-const subtitlePhrases = await readSubtitlesFromFile();
-await initializeModel(subtitlePhrases);
-console.log('predictions', getPredictions('bro you cant count him'));
+//const subtitlePhrases = await readSubtitlesFromFile();
+//await initializeModel(subtitlePhrases);
+//console.log('predictions', getPredictions('bro you cant count him'));
 
-async function readSubtitlesFromFile() {
+export async function readSubtitlesFromFile() {
     try {
       const subtitleText = await fs.promises.readFile(path.join(process.cwd(), 'static', 'en.txt'), 'utf-8');
       return subtitleText;
@@ -37,7 +38,8 @@ export async function initializeModel(phrases) {
         const currentCount = continuationsMap.get(continuation) || 0;
         continuationsMap.set(continuation, currentCount + 1);
     }
-}
+    //await openSubtitleDatabase(trigramFrequencies);
+}   
 
 function extractPhrases(text) {
     const lines = text.split('\n'); 

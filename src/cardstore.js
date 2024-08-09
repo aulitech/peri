@@ -1,4 +1,5 @@
 import { writable } from 'svelte/store';
+import { initializeModel, readSubtitlesFromFile } from './prediction';
 export const phrases = writable([]);
 import data from '$lib/phrasetable.json';
 const phrasefile = "myphrases.json"
@@ -13,9 +14,11 @@ let aliases = []
 let starters = []
 let counts = {}
 
-const dbName = 'MyTestDatabase';
+const dbName = 'PhraseDatabase';
 let db;
 let lastTimeStampKey;
+let trigramsRequested = true;
+let trigramDBEmpty = false;
 
 function onlyUnique(value, index, self) {
     return self.indexOf(value) === index;
@@ -97,10 +100,14 @@ export async function initializeApp(){
         myPhrases = await getAllPhrases(database);
         handleTimeStamps(database);
         updatePhrasesfromDB();
+        //const subtitlePhrases = await readSubtitlesFromFile();
+        //await initializeModel(subtitlePhrases);
     } catch(error) {
         console.error('Database initialization error:', error);
     }
 }
+
+
 
 function handleTimeStamps(database) {
     resetPhraseWeights(database);
@@ -134,7 +141,7 @@ async function openDatabase() { //get rid of phrases argument
         let phraseDBEmpty = false;
         db = event.target.result;
         const existingObjectStores = Array.from(db.objectStoreNames);
-        if (!existingObjectStores.includes("phrases") || !existingObjectStores.includes("timeStamps")) {
+        if (!existingObjectStores.includes("phrases") || !existingObjectStores.includes("timeStamps") || (!existingObjectStores.includes("trigrams") && trigramsRequested)) {
           db.close(); // Close the current connection
           const upgradeRequest = indexedDB.open(dbName, db.version + 1); // Increment the version to trigger onupgradeneeded
   
@@ -146,12 +153,17 @@ async function openDatabase() { //get rid of phrases argument
           upgradeRequest.onupgradeneeded = async (event) => {
             console.log("Upgrading database...");
             db = event.target.result;
-            if(!db.objectStoreNames.contains("phrases")){
+            if (!db.objectStoreNames.contains("phrases")){
                 db.createObjectStore("phrases", { keyPath: "phrase" });
                 phraseDBEmpty = true;
             }
-            if(!db.objectStoreNames.contains("timeStamps")){
+            if (!db.objectStoreNames.contains("timeStamps")){
                 db.createObjectStore("timeStamps", { autoIncrement: true });
+            }
+            if (!db.objectStoreNames.contains("trigrams") && trigramsRequested) {
+                console.log("here");
+                db.createObjectStore("trigrams", { keyPath: "starter"});
+                trigramDBEmpty = true;
             }
           };
   
@@ -159,9 +171,13 @@ async function openDatabase() { //get rid of phrases argument
             db = event.target.result;
             console.log("Database opened successfully. Version:", db.version);
             resolve(db);
-            if(phraseDBEmpty){
+            if (phraseDBEmpty) {
                 setDefaultPhrases();
                 phraseDBEmpty = false;
+            }
+            if (trigramDBEmpty) {
+                fillNGramStore("trigrams");
+                trigramDBEmpty = false;
             }
           };
         } else {
@@ -173,7 +189,29 @@ async function openDatabase() { //get rid of phrases argument
         }
       };
     });
-  }
+}
+
+async function fillNGramStore(storeName) {
+    console.log(storeName);
+    const transaction = db.transaction([storeName], "readwrite");
+    const objectStore = transaction.objectStore(storeName);
+    console.log(objectStore);
+    try {
+        for (let [starter, value] of storeName) {
+            await objectStore.add({starter:starter, prediction: value})
+        }
+        console.log('ngrams added');
+    } catch (error) {
+        console.error("Error filling Ngram store:", error);
+    }
+}
+
+async function getTrigrams() {
+    const transaction = db.transaction(["trigrams"], "readwrite");
+    const trigramStore = transaction.objectStore("trigrams");
+    console.log("getting trigrams...");
+    console.log(getAllOfStore(trigramStore));
+}
 
 export async function setDefaultPhrases(){
     const transaction = db.transaction(["phrases", "timeStamps"], "readwrite");
@@ -206,7 +244,7 @@ async function getSortedPhrases() {
         if (phraseA > phraseB) return 1;
         return 0;
     });
-
+    console.log()
     const sortedPhrases = alphabeticalPhrases.sort((a, b) => b.weight - a.weight); // Sort in descending order of frequency
     return sortedPhrases.map(item => item.phrase);
 }
@@ -274,6 +312,7 @@ async function addTimeStampToDB(phrase){
         const addedKey = event.target.result;
         console.log('key', addedKey);
         timeStampStore.put({id: addedKey, timeStamp, phrase})
+        lastTimeStampKey = addedKey;
         console.log('Timestamp added:', timeStampStore);
     }
     addRequest.onerror = (event) => {
@@ -323,7 +362,9 @@ async function addPhraseToDB(phrase){
             };
         }
         updatePhrasesfromDB();
-
+        console.log('here1');
+        await getTrigrams();
+        console.log('here2');
         await new Promise((resolve, reject) => {
             transaction.oncomplete = () => resolve();
             transaction.onerror = (event) => reject(event.target.error);
@@ -391,7 +432,7 @@ export async function undoAddPhrase() {
                 existingPhrase.frequency -= 1
                 phraseStore.put(existingPhrase);
                 console.log("Phrase frequency updated:", existingPhrase.phrase, existingPhrase.frequency);
-            } else if(existingPhrase && existingPhrase.frequency <= 1) {
+            } else if(existingPhrase && existingPhrase.frequency == 1) {
                 phraseStore.delete(existingPhrase.phrase);
                 console.log('phraseDeleted', existingPhrase);
             }
@@ -450,8 +491,6 @@ export async function getPhraseFromDB(phrase){
             resolve(result);
         }
     });
-    //output.then(return output);
-    return result;
 }
 
 async function getAllPhrases(db) {
