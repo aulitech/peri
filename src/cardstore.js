@@ -248,7 +248,7 @@ async function getAllTimeStamps(db, maxAgeDays = 7) {
                 const timeStampId = timeStamps[i];
                 if (timeStampId.timeStamp < expirationTimestamp){
                     try {
-                        await timeStampStore.delete(timeStampId);
+                        await timeStampStore.delete(timeStampId.id);
                         timeStamps.splice(i, 1);
                         i--;
                     } catch(error) {
@@ -293,8 +293,9 @@ async function addTimeStampToDB(phrase){
     const timeStamp = Date.now();
     const addRequest = timeStampStore.add({ timeStamp: timeStamp, phrase: phrase });
     addRequest.onsuccess = (event) => {
-        lastTimeStampKey = event.target.result;
-        console.log('key', lastTimeStampKey);
+        const addedKey = event.target.result;
+        console.log('key', addedKey);
+        timeStampStore.put({id: addedKey, timeStamp, phrase})
         console.log('Timestamp added:', timeStampStore);
     }
     addRequest.onerror = (event) => {

@@ -4,6 +4,7 @@
 	import Text from '../components/text.svelte';
 	import Speak from '../components/speak.svelte';
 	import Pause from '../components/pause.svelte';
+	import Settings from '../components/settings.svelte';
 	import { onMount } from 'svelte';
 
 	let searchTerm = '';
@@ -117,6 +118,10 @@
         isPaused = !isPaused;
         console.log(isPaused);
     }
+
+	function toggleSettings() {
+		setDefaultPhrases();
+	}
 
 	function handleClick(event){
         /*const undoButton = document.getElementById('undoButton');
@@ -331,6 +336,16 @@
 				</li>
 				<li>
 					<button class="" on:click={() => fs.f()}> {@html fs.display}</button>
+				</li>
+				<li>
+					<div id="settings-div"
+					style="border-radius: 7px;"
+					on:click={() => {
+							clearTimeout(dwellTimer);
+							toggleSettings();
+						}}>
+						<Settings Settings={{ class: 'h-6 w-6 hover:text-primary' }} />
+					</div>
 				</li>
 			</ul>
 		</div>
