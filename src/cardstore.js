@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store';
-import { initializeModel, readSubtitlesFromFile, getTrigrams, fetchSubtitlesFromFile } from './prediction';
+import { initializeModel, readSubtitlesFromFile, getTrigrams, fetchSubtitlesFromFile, getPredictions } from './prediction';
 export const phrases = writable([]);
 import data from '$lib/phrasetable.json';
 const phrasefile = "myphrases.json"
@@ -93,10 +93,6 @@ async function phraseStoreEmpty(database){
 export async function initializeApp(){
     try {
         const database = await openDatabase();
-        /*if(phraseStoreEmpty(database)){
-            console.log('here');
-            setDefaultPhrases();
-        }*/
         myPhrases = await getAllPhrases(database);
         handleTimeStamps(database);
         updatePhrasesfromDB();
@@ -204,7 +200,7 @@ async function fillNGramStore(storeName) {
             await objectStore.add({starter:starter, prediction: value});
         }
         console.log('ngrams added');
-        console.log(await getTrigramsFromDB());
+        //console.log(await getTrigramsFromDB());
     } catch (error) {
         console.error("Error filling Ngram store:", error);
     }
@@ -308,6 +304,31 @@ async function getAllTimeStamps(db, maxAgeDays = 7) {
 export function addPhrase(phrase) {
     addPhraseToDB(phrase);
     addTimeStampToDB(phrase);
+    getPredictionsFromDB(phrase);
+}
+
+async function getPredictionsFromDB(searchTerm) {
+    const prefix = await getPrefixFromSearch(searchTerm, 2);
+    console.log('prefix', prefix);
+    const transaction = db.transaction(["trigrams"], "readwrite");
+    const trigramStore = transaction.objectStore("trigrams");
+    const existingTrigram = await (new Promise((resolve, reject) => {
+        console.log(prefix);
+        const trigramRequest = trigramStore.get(prefix);
+        trigramRequest.onsuccess = (event) => resolve(event.target.result);
+        trigramRequest.onerror = (event) => resolve();
+    }));
+    if (existingTrigram) {
+        console.log('exists', existingTrigram);
+        
+    } else {
+        console.log('doesnt exist');
+    }
+}
+
+async function getPrefixFromSearch(searchTerm, suffixSize) {
+    const words = searchTerm.toLowerCase().trim().split(/\s+/);
+    return words.slice(-2).join(" ");
 }
 
 async function addTimeStampToDB(phrase){

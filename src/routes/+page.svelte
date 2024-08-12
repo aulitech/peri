@@ -217,6 +217,7 @@
 	}
 
 	async function fetchCompletions(term) {
+		console.log('here2');
 		let url = 'https://api.typewise.ai/latest/completion/complete';
 		const response = await fetch(url, {
 			mode: 'cors', // no-cors, *cors, same-origin
@@ -240,8 +241,9 @@
 
 		if (response.ok) {
 			let comps = await response.json();
-			comps = comps.prediction.map((p) => p.text);
+			comps = comps.predictions.map((p) => p.text);
 			comps = comps.sort().filter(onlyUnique);
+			console.log('comps', comps);
 			return comps;
 		} else {
 			const message = `Error: ${response.status}`;
@@ -249,16 +251,57 @@
 		}
 	}
 
-	function getCompletions(term) {
-		return [] //fetchCompletions(term);
+	async function getCompletions(term) {
+		try {
+			console.log("here2");
+			let url = "https://api.typewise.ai/latest/completion/complete";
+			const response = await fetch(url, {
+				mode: "cors",
+				cache: "no-cache",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				redirect: "follow",
+				method: "POST",
+				body: JSON.stringify({
+					token: "string",
+					languages: ["en"],
+					text: term,
+					correctTypoInPartialWord: false,
+					maxNumberOfPredictions: 20,
+				}),
+			});
+
+			if (response.ok) {
+				let comps = await response.json();
+				comps = comps.predictions.map((p) => p.text);
+				comps = comps.sort().filter(onlyUnique);
+				return comps; // Resolve with the result
+			} else {
+				const message = `Error: ${response.status}`;
+				throw new Error(message); // Reject with an error
+			}
+		} catch (error) {
+			console.error("Error fetching completions:", error);
+			throw error; // Re-throw the error to be handled by the caller
+		}
 	}
+
+	/*async function getCompletions(term) {
+		//return [] 
+		return new Promise((resolve, reject) => {
+			const request = fetchCompletions(term);
+			request.onsuccess = (event) => {
+				resolve(event.target.result);
+			};
+			request.onerror = (event) => reject(event.target.error);
+		});
+	}*/
 
 	$: {
 		// look in personal library
 		searchKey = searchTerm.toLowerCase();
 		// find and sort the phrases in the personal library starting with the search term
-		//console.log('here');
-		//console.log($phrases);
 		startsWith = $phrases
 			.filter((phrase) => phrase.toLowerCase().startsWith(searchKey))
 			.filter(onlyUnique);
@@ -286,15 +329,26 @@
 		}, {});
 		// Sort the starters
 		starters = Object.entries(nextWord).sort((a, b) => b[1] - a[1]);
-
-		if (starters.length < 2) {
+		fetchAndAddCompletions(searchKey);
+		/*if (starters.length < 2) {
 			// add from  General word database
-			let nc = getCompletions(searchTerm);
+			//let nc = getCompletions(searchTerm);
+			let nc = await getCompletions('hey man');
+			console.log('nc', nc);
 			starters = starters.concat(nc);
-			//console.log(starters.length);
-		}
+			console.log('start', starters);
+		}*/
 	}
 
+	async function fetchAndAddCompletions(searchTerm) {
+		console.log(starters.length);
+        if (starters.length < 2) {
+            let nc = await getCompletions(searchTerm); // Fetch completions asynchronously
+            starters = starters.concat(nc); 
+            console.log('start', starters);
+        }
+    }
+			
 	fetchCards();
 </script>
 
