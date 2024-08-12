@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store';
-import { initializeModel, readSubtitlesFromFile } from './prediction';
+import { initializeModel, readSubtitlesFromFile, getTrigrams, fetchSubtitlesFromFile } from './prediction';
 export const phrases = writable([]);
 import data from '$lib/phrasetable.json';
 const phrasefile = "myphrases.json"
@@ -100,8 +100,6 @@ export async function initializeApp(){
         myPhrases = await getAllPhrases(database);
         handleTimeStamps(database);
         updatePhrasesfromDB();
-        //const subtitlePhrases = await readSubtitlesFromFile();
-        //await initializeModel(subtitlePhrases);
     } catch(error) {
         console.error('Database initialization error:', error);
     }
@@ -161,13 +159,12 @@ async function openDatabase() { //get rid of phrases argument
                 db.createObjectStore("timeStamps", { autoIncrement: true });
             }
             if (!db.objectStoreNames.contains("trigrams") && trigramsRequested) {
-                console.log("here");
                 db.createObjectStore("trigrams", { keyPath: "starter"});
                 trigramDBEmpty = true;
             }
           };
   
-          upgradeRequest.onsuccess = (event) => {
+          upgradeRequest.onsuccess = async (event) => {
             db = event.target.result;
             console.log("Database opened successfully. Version:", db.version);
             resolve(db);
@@ -176,7 +173,8 @@ async function openDatabase() { //get rid of phrases argument
                 phraseDBEmpty = false;
             }
             if (trigramDBEmpty) {
-                fillNGramStore("trigrams");
+                console.log('here2');
+                await fillNGramStore('trigrams');
                 trigramDBEmpty = false;
             }
           };
@@ -192,25 +190,35 @@ async function openDatabase() { //get rid of phrases argument
 }
 
 async function fillNGramStore(storeName) {
-    console.log(storeName);
-    const transaction = db.transaction([storeName], "readwrite");
-    const objectStore = transaction.objectStore(storeName);
-    console.log(objectStore);
+    let nGrams;
+    if (storeName == 'bigrams') {
+        //nGrams = await getB
+    } else {
+        nGrams = await getTrigrams()
+        console.log(nGrams)
+    }
     try {
-        for (let [starter, value] of storeName) {
-            await objectStore.add({starter:starter, prediction: value})
+        const transaction = db.transaction([storeName], "readwrite");
+        const objectStore = transaction.objectStore(storeName);
+        for (let [starter, value] of nGrams) {
+            await objectStore.add({starter:starter, prediction: value});
         }
         console.log('ngrams added');
+        console.log(await getTrigramsFromDB());
     } catch (error) {
         console.error("Error filling Ngram store:", error);
     }
 }
 
-async function getTrigrams() {
+async function getExtractedNGrams() {
+
+}
+
+export async function getTrigramsFromDB() {
     const transaction = db.transaction(["trigrams"], "readwrite");
     const trigramStore = transaction.objectStore("trigrams");
     console.log("getting trigrams...");
-    console.log(getAllOfStore(trigramStore));
+    console.log('trigrams', await getAllOfStore(trigramStore));
 }
 
 export async function setDefaultPhrases(){
@@ -244,7 +252,6 @@ async function getSortedPhrases() {
         if (phraseA > phraseB) return 1;
         return 0;
     });
-    console.log()
     const sortedPhrases = alphabeticalPhrases.sort((a, b) => b.weight - a.weight); // Sort in descending order of frequency
     return sortedPhrases.map(item => item.phrase);
 }
@@ -362,9 +369,6 @@ async function addPhraseToDB(phrase){
             };
         }
         updatePhrasesfromDB();
-        console.log('here1');
-        await getTrigrams();
-        console.log('here2');
         await new Promise((resolve, reject) => {
             transaction.oncomplete = () => resolve();
             transaction.onerror = (event) => reject(event.target.error);

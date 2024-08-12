@@ -9,6 +9,36 @@ let trigramFrequencies;
 //await initializeModel(subtitlePhrases);
 //console.log('predictions', getPredictions('bro you cant count him'));
 
+export async function getTrigrams(){
+    const subtitlePhrases = await fetchSubtitlesFromFile();
+    const trigrams = await initializeModel(subtitlePhrases);
+    return trigrams
+    /*const subtitlePhrases = await readSubtitlesFromFile();
+    return new Promise((resolve, reject) => {
+        const request = initializeModel(subtitlePhrases);
+        request.onsuccess = (event) => resolve(event.target.result);
+        request.onerror = (event) => reject(event.target.error);
+    });*/
+    
+}
+
+export async function fetchSubtitlesFromFile() {
+    const filePath = '/en.txt'; // Path relative to the 'static' folder
+  
+    try {
+      const response = await fetch(filePath);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+  
+      const subtitleText = await response.text();
+      return subtitleText;
+    } catch (error) {
+      console.error('Error fetching subtitles:', error);
+      // Handle the error appropriately
+    }
+  }
+
 export async function readSubtitlesFromFile() {
     try {
       const subtitleText = await fs.promises.readFile(path.join(process.cwd(), 'static', 'en.txt'), 'utf-8');
@@ -38,6 +68,7 @@ export async function initializeModel(phrases) {
         const currentCount = continuationsMap.get(continuation) || 0;
         continuationsMap.set(continuation, currentCount + 1);
     }
+    return trigramFrequencies;
     //await openSubtitleDatabase(trigramFrequencies);
 }   
 

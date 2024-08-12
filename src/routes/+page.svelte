@@ -1,5 +1,5 @@
 <script>
-	import { fetchCards, phrases, savePhrases, initializeApp, undoAddPhrase, getPhraseFromDB, deletePhraseFromDB, addPhrase, setDefaultPhrases } from '../cardstore';
+	import { fetchCards, phrases, savePhrases, initializeApp, undoAddPhrase, getPhraseFromDB, deletePhraseFromDB, addPhrase, setDefaultPhrases, getTrigramsFromDB } from '../cardstore';
 	import Record from '../components/record.svelte';
 	import Text from '../components/text.svelte';
 	import Speak from '../components/speak.svelte';
@@ -121,6 +121,7 @@
 
 	function toggleSettings() {
 		setDefaultPhrases();
+		getTrigramsFromDB();
 	}
 
 	function handleClick(event){
