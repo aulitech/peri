@@ -344,7 +344,8 @@
 		console.log(starters.length);
         if (starters.length < 2) {
             let nc = await getCompletions(searchTerm); // Fetch completions asynchronously
-            starters = starters.concat(nc); 
+			let ncObjects = nc.map((completion) =>  [completion, 0]);
+            starters = starters.concat(ncObjects); 
             console.log('start', starters);
         }
     }
@@ -553,7 +554,7 @@
 					on:mouseenter|preventDefault={() => dwell(prediction[0] + ' ', true, dwellInterval)}
 					on:click={() => {
 						clearTimeout(dwellTimer);
-						searchTerm = searchTerm + prediction[0] + ' ';
+						searchTerm = searchTerm + prediction + ' ';
 					}}>{prediction[0]}</button
 				>
 			{/each}
