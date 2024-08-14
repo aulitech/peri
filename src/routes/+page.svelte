@@ -378,7 +378,11 @@
 					<div class="settings-top">
 						<div class="top-line">
 							<p class="settings-title">Settings</p>
-							<button class="close-settings" on:click={closeSettings}>X</button>
+							<button class="close-settings" 
+								on:click={closeSettings}
+								on:mouseleave|preventDefault={() => { clearTimeout(dwellTimer); }}
+								on:mouseenter|preventDefault={() => dwellF(closeSettings, dwellInterval)}
+							>X</button>
 						</div>
 					</div>
 					<div class="settings-bottom">
