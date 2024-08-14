@@ -21,8 +21,9 @@
 	let isPaused = true;
 	let undoShown = false;
 	let initialUndoClick = false;
+	let settingsShown = false;
+	let buttonVersion = false;
 
-    // Function to show the undo button (you'll likely call this when a phrase is added)
     function showUndoButton() {
         undoShown = true;
     }
@@ -70,10 +71,8 @@
 			//addPhrase(enteredPhrase);
 			//getPhraseFromDB('A little better');
 			const selectedPhrase = await getPhraseFromDB('A little better');
-			console.log(selectedPhrase);
 		}
 		if(e.key == 'option'){
-			console.log('here');
 			deletePhrase(enteredPhrase);
 		}
 	}
@@ -116,17 +115,27 @@
 
 	function togglePause() {
         isPaused = !isPaused;
-        console.log(isPaused);
     }
 
-	function toggleSettings() {
-		setDefaultPhrases();
-		getTrigramsFromDB();
+	function openSettings() {
+		settingsShown = true;
+		//setDefaultPhrases();
+	}
+
+	function switchPeriType() {
+		buttonVersion = !buttonVersion;
+	}
+
+	function uploadNgrams() {
+		
+	}
+
+	function closeSettings() {
+		settingsShown = false;
 	}
 
 	function handleClick(event){
         /*const undoButton = document.getElementById('undoButton');
-		console.log(undoButton);
 		if (undoButton) {
 			undoShown = false;
 		}*/
@@ -217,7 +226,6 @@
 	}
 
 	async function fetchCompletions(term) {
-		console.log('here2');
 		let url = 'https://api.typewise.ai/latest/completion/complete';
 		const response = await fetch(url, {
 			mode: 'cors', // no-cors, *cors, same-origin
@@ -253,7 +261,7 @@
 
 	async function getCompletions(term) {
 		try {
-			console.log("here2");
+			console.log('term', term);
 			let url = "https://api.typewise.ai/latest/completion/complete";
 			const response = await fetch(url, {
 				mode: "cors",
@@ -301,6 +309,7 @@
 	$: {
 		// look in personal library
 		searchKey = searchTerm.toLowerCase();
+		console.log('search', searchKey);
 		// find and sort the phrases in the personal library starting with the search term
 		startsWith = $phrases
 			.filter((phrase) => phrase.toLowerCase().startsWith(searchKey))
@@ -334,17 +343,17 @@
 			// add from  General word database
 			//let nc = getCompletions(searchTerm);
 			let nc = await getCompletions('hey man');
-			console.log('nc', nc);
 			starters = starters.concat(nc);
 			console.log('start', starters);
 		}*/
 	}
 
 	async function fetchAndAddCompletions(searchTerm) {
-		console.log(starters.length);
         if (starters.length < 2) {
             let nc = await getCompletions(searchTerm); // Fetch completions asynchronously
-			let ncObjects = nc.map((completion) =>  [completion, 0]);
+			let ncObjects = nc.map((completion) =>  {
+				return [completion, searchTerm]
+			});
             starters = starters.concat(ncObjects); 
             console.log('start', starters);
         }
@@ -361,6 +370,56 @@
 		handleClick(event);
 	}}>
 	<div class="bg-tertiary flex flex-col overflow-hidden">
+		{#if settingsShown}
+			<div class="modal-overlay" on:click|stopPropagation>
+				<div class="settings-popup">
+					<div class="settings-top">
+						<div class="top-line">
+							<p class="settings-title">Settings</p>
+							<button class="close-settings" on:click={closeSettings}>X</button>
+						</div>
+					</div>
+					<div class="settings-bottom">
+						<button
+							id="defaultButton"
+							class="w-40 border border-black rounded-md bg-blue-500 hover:text-primary hover:bg-secondary"
+							on:mouseleave|preventDefault={() => {
+								clearTimeout(dwellTimer);
+							}}
+							on:mouseenter|preventDefault={() => dwellF(handleSetDefaults, dwellInterval)}
+							on:click={() => {
+								clearTimeout(dwellTimer);
+								handleSetDefaults();
+							}}
+						>Reset Defaults</button>
+						<button
+							id="switchTypeButton"
+							class="w-40 border border-black rounded-md bg-blue-500 hover:text-primary hover:bg-secondary"
+							on:mouseleave|preventDefault={() => {
+								clearTimeout(dwellTimer);
+							}}
+							on:mouseenter|preventDefault={() => dwellF(switchPeriType, dwellInterval)}
+							on:click={() => {
+								clearTimeout(dwellTimer);
+								switchPeriType();
+							}}
+						>{ #if buttonVersion }Switch to Simplified Version{:else}Switch to Button Version{/if}</button>
+						<button
+							id="uploadNgramsButton"
+							class="w-40 border border-black rounded-md bg-blue-500 hover:text-primary hover:bg-secondary"
+							on:mouseleave|preventDefault={() => {
+								clearTimeout(dwellTimer);
+							}}
+							on:mouseenter|preventDefault={() => dwellF(uploadNgrams, dwellInterval)}
+							on:click={() => {
+								clearTimeout(dwellTimer);
+								uploadNgrams();
+							}}
+						>Upload Ngrams</button>
+					</div>
+				</div>
+			</div>
+		{/if}
 		<div class="w-full flex flex-row">
 			<ul class="w-full pt-4 pb-2 flex flex-row justify-evenly">
 				<li>
@@ -398,7 +457,7 @@
 					style="border-radius: 7px;"
 					on:click={() => {
 							clearTimeout(dwellTimer);
-							toggleSettings();
+							openSettings();
 						}}>
 						<Settings Settings={{ class: 'h-6 w-6 hover:text-primary' }} />
 					</div>
@@ -554,7 +613,7 @@
 					on:mouseenter|preventDefault={() => dwell(prediction[0] + ' ', true, dwellInterval)}
 					on:click={() => {
 						clearTimeout(dwellTimer);
-						searchTerm = searchTerm + prediction + ' ';
+						searchTerm = searchTerm + prediction[0] + ' ';
 					}}>{prediction[0]}</button
 				>
 			{/each}
@@ -613,4 +672,78 @@
 </div>
 
 <style>
+	:root {
+		--rounded: 15px;
+	}
+
+	.modal-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black overlay */
+		z-index:   
+	10; /* Ensure it's on top of other content */
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+  .settings-popup {
+    background-color: white;
+    padding: 0;
+	width: 30%;
+	height: 30%;
+	min-width: 300px;
+	min-height: 300px;
+	z-index: 11; /* Higher than the overlay */
+	background-color: white;
+	border-radius: var(--rounded);
+  }
+
+  .settings-top {
+		background-color: grey;
+		width: 100%;
+		height: 15%;
+		margin: 0;
+		border-radius: var(--rounded) var(--rounded) 0px 0px;
+	}
+
+	.top-line {
+		position: relative;
+		height: 20px;
+		top: 25%;
+  }
+
+  .settings-title {
+		font-size: 20px;
+		position: absolute; 
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%); /* Center both horizontally and vertically */
+  }
+
+	.close-settings {
+		/* Align the button to the right */
+		position: absolute;
+		top: 50%;
+		right: 5px; /* Adjust spacing as needed */
+		transform: translateY(-50%); /* Center vertically */
+	}
+
+	.settings-bottom {
+		padding: 20px;
+		background-color:white;
+		width:100%;
+		height:85%;
+		border-radius: 0px 0px var(--rounded) var(--rounded);
+		display: flex;
+		justify-content: space-between;
+		flex-direction: column;
+	}
+
+	.settings-bottom>* {
+		margin: auto;
+	}
 </style>
