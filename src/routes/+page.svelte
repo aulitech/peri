@@ -341,22 +341,15 @@
 		// Sort the starters
 		starters = Object.entries(nextWord).sort((a, b) => b[1] - a[1]);
 		fetchAndAddCompletions(searchKey);
-		/*if (starters.length < 2) {
-			// add from  General word database
-			//let nc = getCompletions(searchTerm);
-			let nc = await getCompletions('hey man');
-			starters = starters.concat(nc);
-			console.log('start', starters);
-		}*/
 	}
 
 	async function fetchAndAddCompletions(searchTerm) {
         if (starters.length < 2) {
             let nc = await getCompletions(searchTerm); // Fetch completions asynchronously
 			let ncObjects = nc.map((completion) =>  {
-				return [completion, searchTerm]
+				return [completion, 0]
 			});
-            starters = starters.concat(ncObjects); 
+            starters = ncObjects.concat(starters); 
             console.log('start', starters);
         }
     }
@@ -553,7 +546,7 @@
 							on:click={() => {
 								clearTimeout(dwellTimer);
 								handleUndo();
-							}}>Undo Button</button>
+							}}>Undo</button>
 						{/if}
 					</div>
 					{#if buttonVersion}
