@@ -346,13 +346,21 @@
 	async function fetchAndAddCompletions(searchTerm) {
         if (starters.length < 2) {
             let nc = await getCompletions(searchTerm); // Fetch completions asynchronously
+			for (let i = 0; i < Math.min(nc.length, 25); i++) {
+				nc[i] = replaceHyphens(nc[i]);
+			}
 			let ncObjects = nc.map((completion) =>  {
 				return [completion, 0]
 			});
             starters = ncObjects.concat(starters); 
-            console.log('start', starters);
+            //console.log('start', starters);
         }
     }
+
+	function replaceHyphens(text) {
+		text = text.replace(/--/g, " ");
+		return text.replace(/-/g, " ");
+	}
 			
 	fetchCards();
 </script>
