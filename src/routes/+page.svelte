@@ -352,11 +352,12 @@
 			console.log('begin', lastWord);
             let nc = await getCompletions(searchTerm); 
 			for (let i = 0; i < nc.length/*Math.min(nc.length, 25)*/; i++) {
-				nc[i] = removeDoubleHyphens(nc[i]);
+				replaceHyphens(nc[i]);
+				/*nc[i] = removeDoubleHyphens(nc[i]);
 				if (lastWord) {
 					console.log('here', nc[i]);
 					nc[i] = removeLastWord(nc[i], lastWord);
-				}
+				}*/
 			}
 			let ncObjects = nc.map((completion) =>  {
 				return [completion, 0]
@@ -685,8 +686,13 @@
 					on:mouseenter|preventDefault={() => dwell(prediction[0] + ' ', true, dwellInterval)}
 					on:click={() => {
 						prediction[0] = prediction[0].replace(/-/g, ' ');
+						const termArr = searchTerm.split(' ');
+						//console.log('arr', termArr);
+						const lastWord = termArr[termArr.length - 1];
+						const beginTerm = termArr.slice(0, -1);
 						clearTimeout(dwellTimer);
-						searchTerm = searchTerm + prediction[0] + ' ';
+						searchTerm = beginTerm.join(' ') + ' ' + prediction[0] + ' ';
+						searchTerm.replace(/-/g, ' ');
 					}}>{prediction[0]}</button
 				>
 			{/each}
