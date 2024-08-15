@@ -345,21 +345,43 @@
 
 	async function fetchAndAddCompletions(searchTerm) {
         if (starters.length < 2) {
-            let nc = await getCompletions(searchTerm); // Fetch completions asynchronously
-			for (let i = 0; i < Math.min(nc.length, 25); i++) {
-				nc[i] = replaceHyphens(nc[i]);
+			const termArr = searchTerm.split(' ');
+			console.log('arr', termArr);
+			const lastWord = termArr[termArr.length - 1];
+			//const beginTerm = termArr.slice(0, -1);
+			console.log('begin', lastWord);
+            let nc = await getCompletions(searchTerm); 
+			for (let i = 0; i < nc.length/*Math.min(nc.length, 25)*/; i++) {
+				nc[i] = removeDoubleHyphens(nc[i]);
+				if (lastWord) {
+					console.log('here', nc[i]);
+					nc[i] = removeLastWord(nc[i], lastWord);
+				}
 			}
 			let ncObjects = nc.map((completion) =>  {
 				return [completion, 0]
 			});
             starters = ncObjects.concat(starters); 
-            //console.log('start', starters);
+            console.log('start', starters);
         }
     }
 
 	function replaceHyphens(text) {
 		text = text.replace(/--/g, " ");
 		return text.replace(/-/g, " ");
+	}
+
+	function removeDoubleHyphens(text) {
+		return text.replace(/--/g, '-');
+	}
+
+	function removeLastWord(text, lastWord) {
+		console.log(lastWord);
+		if (lastWord.length <= text.length && text.substring(0, lastWord.length) == lastWord) {
+			return text.slice(lastWord.length);
+		} else {
+			return '/' + text;
+		}
 	}
 			
 	fetchCards();
@@ -662,6 +684,7 @@
 					}}
 					on:mouseenter|preventDefault={() => dwell(prediction[0] + ' ', true, dwellInterval)}
 					on:click={() => {
+						prediction[0] = prediction[0].replace(/-/g, ' ');
 						clearTimeout(dwellTimer);
 						searchTerm = searchTerm + prediction[0] + ' ';
 					}}>{prediction[0]}</button
