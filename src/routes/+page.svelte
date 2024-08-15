@@ -503,6 +503,7 @@
 								id="txt"
 								name="txt"
 								class="p-2   text-3xl outline-none border-none bg-primary text-primary"
+								style="min-width:312px"
 								placeholder="Type a phrase"
 								bind:value={searchTerm}
 								size={searchTerm.length}
