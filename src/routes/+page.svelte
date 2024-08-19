@@ -297,17 +297,6 @@
 		}
 	}
 
-	/*async function getCompletions(term) {
-		//return [] 
-		return new Promise((resolve, reject) => {
-			const request = fetchCompletions(term);
-			request.onsuccess = (event) => {
-				resolve(event.target.result);
-			};
-			request.onerror = (event) => reject(event.target.error);
-		});
-	}*/
-
 	$: {
 		// look in personal library
 		searchKey = searchTerm.toLowerCase();
@@ -349,10 +338,10 @@
 			console.log('arr', termArr);
 			const lastWord = termArr[termArr.length - 1];
 			//const beginTerm = termArr.slice(0, -1);
-			console.log('begin', lastWord);
+			//console.log('begin', lastWord);
             let nc = await getCompletions(searchTerm); 
 			for (let i = 0; i < nc.length/*Math.min(nc.length, 25)*/; i++) {
-				replaceHyphens(nc[i]);
+				nc[i] = replaceHyphens(nc[i]);
 				/*nc[i] = removeDoubleHyphens(nc[i]);
 				if (lastWord) {
 					console.log('here', nc[i]);
@@ -689,7 +678,13 @@
 						const termArr = searchTerm.split(' ');
 						//console.log('arr', termArr);
 						const lastWord = termArr[termArr.length - 1];
-						const beginTerm = termArr.slice(0, -1);
+						let beginTerm = termArr.slice(0, -2);
+						if (lastWord) {	
+							beginTerm = termArr.slice(0, -1);
+						}
+						console.log('term', beginTerm);
+						console.log('arr', termArr);
+						console.log('last', lastWord);
 						clearTimeout(dwellTimer);
 						searchTerm = beginTerm.join(' ') + ' ' + prediction[0] + ' ';
 						searchTerm.replace(/-/g, ' ');

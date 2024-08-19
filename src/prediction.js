@@ -3,23 +3,12 @@ import fs from 'fs';
 import path from 'path';
 import { openSubtitleDatabase } from './database';
 
-let ngramModel;
 let trigramFrequencies;
-//const subtitlePhrases = await readSubtitlesFromFile();
-//await initializeModel(subtitlePhrases);
-//console.log('predictions', getPredictions('bro you cant count him'));
 
 export async function getTrigrams(){
     const subtitlePhrases = await fetchSubtitlesFromFile();
     const trigrams = await initializeModel(subtitlePhrases);
     return trigrams
-    /*const subtitlePhrases = await readSubtitlesFromFile();
-    return new Promise((resolve, reject) => {
-        const request = initializeModel(subtitlePhrases);
-        request.onsuccess = (event) => resolve(event.target.result);
-        request.onerror = (event) => reject(event.target.error);
-    });*/
-    
 }
 
 export async function fetchSubtitlesFromFile() {
@@ -78,8 +67,6 @@ function extractPhrases(text) {
     for (const line of lines) {
       const words = line.trim().split(/\s+/); // Split on whitespace and trim
       if (3 <= words.length && words.length <= 5) { 
-        //const phrase = words.join(' ').toLowerCase();
-        //allTrigrams.push(...trigramFunction(words));
         for (let i = 0; i <= words.length - 3; i++) {
             const trigram = words.slice(i, i + 3).join(' ').toLowerCase(); 
             allTrigrams.push(trigram);

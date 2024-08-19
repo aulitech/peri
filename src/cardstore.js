@@ -108,20 +108,6 @@ function handleTimeStamps(database) {
     getAllTimeStamps(database);
 }
 
-// Function to check if the database exists
-async function checkDatabaseExists() {
-    return new Promise((resolve) => {
-        const request = indexedDB.open(dbName); // Open without version to check existence
-        request.onerror = (event) => {
-            resolve(false); // Database doesn't exist
-        };
-        request.onsuccess = (event) => {
-            db = event.target.result;
-            resolve(true); // Database exists
-        };
-    });
-}
-
 async function openDatabase() { //get rid of phrases argument
     console.log("Opening database...");
     return new Promise((resolve, reject) => {
@@ -204,10 +190,6 @@ async function fillNGramStore(storeName) {
     } catch (error) {
         console.error("Error filling Ngram store:", error);
     }
-}
-
-async function getExtractedNGrams() {
-
 }
 
 export async function getTrigramsFromDB() {
@@ -481,20 +463,6 @@ async function getAllOfStore(objectStore) {
             resolve(event.target.result);
         }
         request.onerror = (event) => {
-            reject(event.target.error);
-        }
-    });
-}
-
-async function getCountOfObjectStore(objectStore) {
-    return new Promise((resolve, reject) => {
-        const countRequest = objectStore.count();
-
-        countRequest.onsuccess = (event) => {
-            resolve(event.target.result);
-        }
-
-        countRequest.onerror = (event) => {
             reject(event.target.error);
         }
     });
