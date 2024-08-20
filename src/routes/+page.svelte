@@ -23,6 +23,8 @@
 	let initialUndoClick = false;
 	let settingsShown = false;
 	let buttonVersion = false;
+	let replaceVersion = false;
+	let versionColor = 'red';
 
     function showUndoButton() {
         undoShown = true;
@@ -62,6 +64,15 @@
 			document.documentElement.requestFullscreen();
 		} else if (document.exitFullscreen) {
 			document.exitFullscreen();
+		}
+	}
+
+	function switchPredictionVersion() {
+		replaceVersion = !replaceVersion;
+		if (versionColor === 'red') {
+			versionColor = 'white';
+		} else {
+			versionColor = 'red';
 		}
 	}
 
@@ -353,10 +364,10 @@
 		}, {});
 		// Sort the starters
 		starters = Object.entries(nextWord).sort((a, b) => b[1] - a[1]);
-		if (true) {
-			addCompletionsRemoval(searchKey);
+		if (replaceVersion) {
+			fetchAndAddCompletions(searchKey);
 		} else {
-			//fetchAndAddCompletions(searchKey);
+			addCompletionsRemoval(searchKey);
 		}
 	}
 
@@ -476,6 +487,18 @@
 							}}
 						>{ #if buttonVersion }Switch to Simplified Version{:else}Switch to Button Version{/if}</button>
 						<button
+							id="switchPredictionButton"
+							class="w-40 border border-black rounded-md bg-blue-500 hover:text-primary hover:bg-secondary"
+							on:mouseleave|preventDefault={() => {
+								clearTimeout(dwellTimer);
+							}}
+							on:mouseenter|preventDefault={() => dwellF(switchPredictionVersion, dwellInterval)}
+							on:click={() => {
+								clearTimeout(dwellTimer);
+								switchPredictionVersion();
+							}}
+						>Switch Prediction Version</button>
+						<!--<button
 							id="uploadNgramsButton"
 							class="w-40 border border-black rounded-md bg-blue-500 hover:text-primary hover:bg-secondary"
 							on:mouseleave|preventDefault={() => {
@@ -486,7 +509,7 @@
 								clearTimeout(dwellTimer);
 								uploadNgrams();
 							}}
-						>Upload Ngrams</button>
+						>Upload Ngrams</button>-->
 					</div>
 				</div>
 			</div>
@@ -719,10 +742,10 @@
 
 		<div class="max-h-24 flex flex-row flex-wrap overflow-hidden">
 			{#each starters as prediction}
-				{ #if prediction[1] === "replace" }
+				{ #if prediction[1] === "replace" || replaceVersion }
 					<button
 						class="pl-4 pr-4 pt-2 pb-2 min-w-[4rem] rounded-full text-2xl text-tertiary hover:text-primary hover:bg-secondary"
-						style="color:red"
+						style="color:{versionColor}"
 						on:mouseleave|preventDefault={() => {
 							clearTimeout(dwellTimer);
 						}}
