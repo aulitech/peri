@@ -146,6 +146,30 @@
 		}
 	}
 
+	function handleSelectReplacement(prediction) {
+		console.log('prediction', prediction);
+		prediction[0] = prediction[0].replace(/-/g, ' ');
+		const termArr = searchTerm.split(' ');
+		//console.log('arr', termArr);
+		const lastWord = termArr[termArr.length - 1];
+		let beginTerm = termArr.slice(0, -2);
+		if (lastWord) {	
+			beginTerm = termArr.slice(0, -1);
+		}
+		clearTimeout(dwellTimer);
+		searchTerm = beginTerm.join(' ') + ' ' + prediction[0] + ' ';
+		searchTerm = searchTerm.replace('-', ' ');
+		searchTerm = searchTerm.replace(/ {2,}/g, ' ');
+	}
+
+	function handleSelectContinuation(prediction) {
+		//prediction[0] = prediction[0].replace(/-/g, ' ');
+		searchTerm = searchTerm.trim();
+		searchTerm = searchTerm + prediction[0];
+		searchTerm = searchTerm.replace(/-/g, ' ');
+		searchTerm = searchTerm.replace(/ {2,}/g, ' ');
+	}
+
 	// not easy to localize
 	const kbd = [...Array(26)].map((_, i) => String.fromCharCode('a'.charCodeAt(0) + i));
 
@@ -329,7 +353,35 @@
 		}, {});
 		// Sort the starters
 		starters = Object.entries(nextWord).sort((a, b) => b[1] - a[1]);
-		fetchAndAddCompletions(searchKey);
+		if (true) {
+			addCompletionsRemoval(searchKey);
+		} else {
+			//fetchAndAddCompletions(searchKey);
+		}
+	}
+
+	async function addCompletionsRemoval(searchTerm) {
+		if (starters.length < 2) {
+			const termArr = searchTerm.split(' ');
+			const lastWord = termArr[termArr.length - 1];
+			const allowedLength = 25;
+            let nc = await getCompletions(searchTerm); 
+			const ncLength = Math.max(allowedLength, nc.length);
+			let ncObjects = [];
+			console.log(nc);
+			for (let i = 0; i < ncLength; i++) {
+				if (nc[i]) {
+					nc[i] = removeDoubleHyphens(nc[i]);
+				}
+				if (lastWord && nc[i]) {
+					ncObjects.push(removeLastWord(nc[i], lastWord));
+				} else {
+					console.log(lastWord, nc[i]);
+				}
+			}
+            starters = ncObjects.concat(starters); 
+            console.log('start', starters);
+		}
 	}
 
 	async function fetchAndAddCompletions(searchTerm) {
@@ -368,9 +420,9 @@
 	function removeLastWord(text, lastWord) {
 		console.log(lastWord);
 		if (lastWord.length <= text.length && text.substring(0, lastWord.length) == lastWord) {
-			return text.slice(lastWord.length);
+			return [text.slice(lastWord.length), "continue"];
 		} else {
-			return '/' + text;
+			return [text, "replace"];
 		}
 	}
 			
@@ -667,29 +719,30 @@
 
 		<div class="max-h-24 flex flex-row flex-wrap overflow-hidden">
 			{#each starters as prediction}
-				<button
-					class="pl-4 pr-4 pt-2 pb-2 min-w-[4rem] rounded-full text-2xl text-tertiary hover:text-primary hover:bg-secondary"
-					on:mouseleave|preventDefault={() => {
-						clearTimeout(dwellTimer);
-					}}
-					on:mouseenter|preventDefault={() => dwell(prediction[0] + ' ', true, dwellInterval)}
-					on:click={() => {
-						prediction[0] = prediction[0].replace(/-/g, ' ');
-						const termArr = searchTerm.split(' ');
-						//console.log('arr', termArr);
-						const lastWord = termArr[termArr.length - 1];
-						let beginTerm = termArr.slice(0, -2);
-						if (lastWord) {	
-							beginTerm = termArr.slice(0, -1);
-						}
-						console.log('term', beginTerm);
-						console.log('arr', termArr);
-						console.log('last', lastWord);
-						clearTimeout(dwellTimer);
-						searchTerm = beginTerm.join(' ') + ' ' + prediction[0] + ' ';
-						searchTerm.replace(/-/g, ' ');
-					}}>{prediction[0]}</button
-				>
+				{ #if prediction[1] === "replace" }
+					<button
+						class="pl-4 pr-4 pt-2 pb-2 min-w-[4rem] rounded-full text-2xl text-tertiary hover:text-primary hover:bg-secondary"
+						style="color:red"
+						on:mouseleave|preventDefault={() => {
+							clearTimeout(dwellTimer);
+						}}
+						on:mouseenter|preventDefault={() => dwell(prediction[0] + ' ', true, dwellInterval)}
+						on:click={() => {
+							handleSelectReplacement(prediction);
+						}}>{prediction[0]}</button
+					>
+				{:else}
+					<button
+						class="pl-4 pr-4 pt-2 pb-2 min-w-[4rem] rounded-full text-2xl text-tertiary hover:text-primary hover:bg-secondary"
+						on:mouseleave|preventDefault={() => {
+							clearTimeout(dwellTimer);
+						}}
+						on:mouseenter|preventDefault={() => dwell(prediction[0] + ' ', true, dwellInterval)}
+						on:click={() => {
+							handleSelectContinuation(prediction);
+						}}>{prediction[0]}</button
+					>
+				{/if}
 			{/each}
 		</div>
 	</div>
