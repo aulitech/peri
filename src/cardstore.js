@@ -5,10 +5,23 @@ import data from '$lib/phrasetable.json';
 const phrasefile = "myphrases.json"
 
 let loaded = false;
-let myPhrases = data.phrases.map(makePhrases);
+let myPhrases = data.phrases.map(phrase => makePhrases(phrase).phrase);
 myPhrases = myPhrases.sort().map(phrase => phrase.trim()).filter(onlyUnique);
-let defaultPhrases = data.phrases.map(makePhrases);
-defaultPhrases = myPhrases.sort().map(phrase => phrase.trim()).filter(onlyUnique);
+let defaultPhrases = data.phrases.map(phrase => makePhrases(phrase).phrase);
+defaultPhrases = defaultPhrases.sort().map(phrase => phrase.trim()).filter(onlyUnique);
+let phrasesWithCategories = data.phrases.map(makePhrases);
+console.log(phrasesWithCategories);
+let categoryMap = new Map();
+for (const phraseObj of phrasesWithCategories) {
+    if (categoryMap.has(phraseObj.category)) {
+        let categoryArr = categoryMap.get(phraseObj.category);
+        categoryArr.push(phraseObj.phrase);
+        categoryMap.set(phraseObj.category, categoryArr);
+    } else {
+        categoryMap.set(phraseObj.category, new Array(phraseObj.phrase));
+    }
+}
+console.log(categoryMap);
 
 let aliases = []
 let starters = []
@@ -39,7 +52,7 @@ export const fetchCards = async() => {
 
 function expand(phrase) {
     // expand aliases here
-    return phrase.txt
+    return {phrase: phrase.txt, category: phrase.category};
 }
 
 function makePhrases(phrase) {

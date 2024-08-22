@@ -6,6 +6,7 @@
 	import Pause from '../components/pause.svelte';
 	import Settings from '../components/settings.svelte';
 	import { onMount } from 'svelte';
+	//import { voiceMap } from '../lib/voices.js';
 
 	let searchTerm = '';
 	let startsWith = [];
@@ -25,6 +26,8 @@
 	let buttonVersion = false;
 	let replaceVersion = false;
 	let versionColor = 'red';
+	let voices = new Map();
+	let femaleVoice = true;
 
     function showUndoButton() {
         undoShown = true;
@@ -45,6 +48,12 @@
 			}
         }
 
+		if ('speechSynthesis' in window) {
+			speechSynthesis.onvoiceschanged = function() {
+				populateVoices();
+			};
+		}
+
         window.addEventListener('click', handleClickOutside);
 
         return () => {
@@ -55,8 +64,29 @@
 	function speakNow(txt) {
 		var msg = new SpeechSynthesisUtterance();
 		msg.text = txt;
+		/*const englishMaleVoices = voices.filter(voice => 
+			voice.lang.startsWith('en') && voice.gender === 'male' 
+		);
+		if (englishMaleVoices.length > 0) {
+			msg.voice = englishMaleVoices[0];
+		}*/
+		console.log('before', msg.voice);
+		msg.voice = voices.get('Aaron');
+		//msg.voice = voices.get('Arthur');
+		console.log('after', msg.voice)
 		window.speechSynthesis.speak(msg);
 		searchTerm = '';
+	}
+
+	function populateVoices() {
+		var msg = new SpeechSynthesisUtterance();
+		const allVoices = speechSynthesis.getVoices();
+		voices.set('Samantha', allVoices[0]);
+		voices.set('Aaron', allVoices[1]);
+		voices.set('Albert', allVoices[2]);
+		voices.set('Arthur', allVoices[8]);
+		voices.set('Catherine', allVoices[15]);
+		console.log('voices', voices);
 	}
 
 	function toggleFullScreen() {
@@ -74,6 +104,10 @@
 		} else {
 			versionColor = 'red';
 		}
+	}
+
+	function switchVoice() {
+		femaleVoice = !femalVoice;
 	}
 
 	async function handleKeydown(e){
@@ -436,7 +470,6 @@
 			return [text, "replace"];
 		}
 	}
-			
 	fetchCards();
 </script>
 
@@ -498,6 +531,18 @@
 								switchPredictionVersion();
 							}}
 						>Switch Prediction Version</button>
+						<button
+							id="switchVoiceButton"
+							class="w-40 border border-black rounded-md bg-blue-500 hover:text-primary hover:bg-secondary"
+							on:mouseleave|preventDefault={() => {
+								clearTimeout(dwellTimer);
+							}}
+							on:mouseenter|preventDefault={() => dwellF(switchVoice, dwellInterval)}
+							on:click={() => {
+								clearTimeout(dwellTimer);
+								switchVoice();
+							}}
+						>{#if femaleVoice }Switch Voice to Aaron{:else}Switch Voice to Samantha{/if}</button>
 						<!--<button
 							id="uploadNgramsButton"
 							class="w-40 border border-black rounded-md bg-blue-500 hover:text-primary hover:bg-secondary"
