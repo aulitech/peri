@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store';
 import { initializeModel, readSubtitlesFromFile, getTrigrams, fetchSubtitlesFromFile, getPredictions } from './prediction';
 export const phrases = writable([]);
+export const categoryWritable = writable(new Map());
 import data from '$lib/phrasetable.json';
 const phrasefile = "myphrases.json"
 
@@ -10,18 +11,9 @@ myPhrases = myPhrases.sort().map(phrase => phrase.trim()).filter(onlyUnique);
 let defaultPhrases = data.phrases.map(phrase => makePhrases(phrase).phrase);
 defaultPhrases = defaultPhrases.sort().map(phrase => phrase.trim()).filter(onlyUnique);
 let phrasesWithCategories = data.phrases.map(makePhrases);
-console.log(phrasesWithCategories);
-let categoryMap = new Map();
-for (const phraseObj of phrasesWithCategories) {
-    if (categoryMap.has(phraseObj.category)) {
-        let categoryArr = categoryMap.get(phraseObj.category);
-        categoryArr.push(phraseObj.phrase);
-        categoryMap.set(phraseObj.category, categoryArr);
-    } else {
-        categoryMap.set(phraseObj.category, new Array(phraseObj.phrase));
-    }
-}
-console.log(categoryMap);
+//console.log(phrasesWithCategories);
+export let categoryMap = new Map();
+populateCategoryMap();
 
 let aliases = []
 let starters = []
@@ -32,6 +24,21 @@ let db;
 let lastTimeStampKey;
 let trigramsRequested = true;
 let trigramDBEmpty = false;
+
+function populateCategoryMap() {
+    for (const phraseObj of phrasesWithCategories) {
+        if (categoryMap.has(phraseObj.category)) {
+            let categorySet = categoryMap.get(phraseObj.category);
+            categorySet.add(phraseObj.phrase);
+            categoryMap.set(phraseObj.category, categorySet);
+        } else {
+            categoryMap.set(phraseObj.category, new Set([phraseObj.phrase]));
+        }
+    }
+    if (!categoryMap.has("Custom Phrase")) {
+        categoryMap.set("Custom Phrase", new Set());
+    }
+}
 
 function onlyUnique(value, index, self) {
     return self.indexOf(value) === index;
@@ -109,6 +116,8 @@ export async function initializeApp(){
         myPhrases = await getAllPhrases(database);
         handleTimeStamps(database);
         updatePhrasesfromDB();
+        populateCategoriesFromDB();
+        console.log(categoryMap)
     } catch(error) {
         console.error('Database initialization error:', error);
     }
@@ -134,7 +143,7 @@ async function openDatabase() { //get rid of phrases argument
         let phraseDBEmpty = false;
         db = event.target.result;
         const existingObjectStores = Array.from(db.objectStoreNames);
-        if (!existingObjectStores.includes("phrases") || !existingObjectStores.includes("timeStamps") || (!existingObjectStores.includes("trigrams") && trigramsRequested)) {
+        if (!existingObjectStores.includes("phrases") || !existingObjectStores.includes("timeStamps") || (!existingObjectStores.includes("trigrams") && trigramsRequested) || (!existingObjectStores.includes("addedPhrases"))) {
           db.close(); // Close the current connection
           const upgradeRequest = indexedDB.open(dbName, db.version + 1); // Increment the version to trigger onupgradeneeded
   
@@ -156,6 +165,9 @@ async function openDatabase() { //get rid of phrases argument
             if (!db.objectStoreNames.contains("trigrams") && trigramsRequested) {
                 db.createObjectStore("trigrams", { keyPath: "starter"});
                 trigramDBEmpty = true;
+            }
+            if (!db.objectStoreNames.contains("addedPhrases")) {
+                db.createObjectStore("addedPhrases", {keyPath: "phrase"});
             }
           };
   
@@ -209,16 +221,52 @@ export async function getTrigramsFromDB() {
     const transaction = db.transaction(["trigrams"], "readwrite");
     const trigramStore = transaction.objectStore("trigrams");
     console.log("getting trigrams...");
-    console.log('trigrams', await getAllOfStore(trigramStore));
+    const allTrigrams = await getAllOfStore(trigramStore)
+    console.log('trigrams', allTrigrams);
+    return allTrigrams;
 }
 
-export async function setDefaultPhrases(){
-    const transaction = db.transaction(["phrases", "timeStamps"], "readwrite");
+async function addPhraseToAddedPhrases(phraseObj) {
+    const transaction = db.transaction(["addedPhrases"], 'readwrite');
+    const phraseStore = transaction.objectStore("addedPhrases");
+    phraseStore.put(phraseObj);
+    const request = phraseStore.getAll();
+    request.onsuccess = (event) => console.log('addedPhrases:', event.target.result);
+}
+
+function addPhraseToCategoryMap(phrase, category) {
+    const currCategory = categoryMap.get(category);
+    currCategory.add(phrase);
+    categoryMap.set(category, currCategory);
+}
+
+async function populateCategoriesFromDB() {
+    const transaction = db.transaction(["addedPhrases"], 'readwrite');
+    const phraseStore = transaction.objectStore("addedPhrases");
+    const request = phraseStore.getAll();
+    request.onsuccess = (event) => {
+        const addedPhrases = event.target.result;
+        for (const phraseObj of addedPhrases) {
+            if (categoryMap.has(phraseObj.category)) {
+                let categorySet = categoryMap.get(phraseObj.category);
+                categorySet.add(phraseObj.phrase);
+                categoryMap.set(phraseObj.category, categorySet);
+            } else {
+                categoryMap.set(phraseObj.category, new Set([phraseObj.phrase]));
+            }
+        }
+    };
+}
+
+export async function setDefaultPhrases() {
+    const transaction = db.transaction(["phrases", "timeStamps", "addedPhrases"], "readwrite");
     const phraseStore = transaction.objectStore("phrases");
     const timeStampStore = transaction.objectStore("timeStamps");
+    const addedStore = transaction.objectStore("addedPhrases");
     try {
         await timeStampStore.clear();
         await phraseStore.clear(); // Clear the existing object store
+        await addedStore.clear();
         console.log("Object store cleared");
 
         // Add default phrases with frequencies
@@ -296,10 +344,17 @@ async function getAllTimeStamps(db, maxAgeDays = 7) {
     });
 }
 
-export function addPhrase(phrase) {
+export function addPhrase(phrase, category = 'Custom Phrase') {
     addPhraseToDB(phrase);
     addTimeStampToDB(phrase);
+    if (!defaultPhrases.includes(phrase)) {
+        console.log('not', phrase);
+        addPhraseToCategoryMap(phrase, category);
+        addPhraseToAddedPhrases({ phrase:phrase, category: category });
+    }
     getPredictionsFromDB(phrase);
+    updatePhrasesfromDB();
+    //console.log('map', categoryMap);
 }
 
 async function getPredictionsFromDB(searchTerm) {
@@ -485,6 +540,8 @@ async function updatePhrasesfromDB(){
     getAllTimeStamps(db);
     const newPhrases = await getSortedPhrases();
     phrases.set(newPhrases);
+    categoryWritable.set(categoryMap);
+    console.log('here1', categoryWritable);
 }
 
 export async function getPhraseFromDB(phrase){

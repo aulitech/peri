@@ -1,5 +1,5 @@
 <script>
-	import { fetchCards, phrases, savePhrases, initializeApp, undoAddPhrase, getPhraseFromDB, deletePhraseFromDB, addPhrase, setDefaultPhrases, getTrigramsFromDB } from '../cardstore';
+	import { categoryWritable, fetchCards, phrases, categoryMap, savePhrases, initializeApp, undoAddPhrase, getPhraseFromDB, deletePhraseFromDB, addPhrase, setDefaultPhrases, getTrigramsFromDB } from '../cardstore';
 	import Record from '../components/record.svelte';
 	import Text from '../components/text.svelte';
 	import Speak from '../components/speak.svelte';
@@ -28,6 +28,9 @@
 	let versionColor = 'red';
 	let voices = new Map();
 	let femaleVoice = true;
+	let currCategory;
+	let categoryArr = [];
+	const defaultCategory = 'Choose Category';
 
     function showUndoButton() {
         undoShown = true;
@@ -53,6 +56,11 @@
 				populateVoices();
 			};
 		}
+		console.log('map', categoryMap);
+		categoryArr = new Array(...categoryMap.keys());
+		//categoryArr = new Array(...$categoryWritable.keys());
+		console.log(categoryArr);
+		//populateCategorySelect(categoryArr);
 
         window.addEventListener('click', handleClickOutside);
 
@@ -60,6 +68,25 @@
             window.removeEventListener('click', handleClickOutside);
         };
     });
+
+	function populateCategorySelect(categories) {
+		const selectElement = document.getElementById('categorySelect');
+		categories.forEach(item => {
+			const option = document.createElement('option');
+			option.value = item;
+			option.text = item;
+			selectElement.appendChild(option);
+		});
+	}
+
+	function handleCategoryChange(event) {
+		const selectedCategory = event.target.value;
+		if (selectedCategory === defaultCategory) {
+			currCategory = null;
+		} else {	
+			currCategory = event.target.value;
+		}
+	}
 
 	function speakNow(txt) {
 		var msg = new SpeechSynthesisUtterance();
@@ -192,7 +219,7 @@
 	}
 
 	function handleSelectReplacement(prediction) {
-		console.log('prediction', prediction);
+		//console.log('prediction', prediction);
 		prediction[0] = prediction[0].replace(/-/g, ' ');
 		const termArr = searchTerm.split(' ');
 		//console.log('arr', termArr);
@@ -322,7 +349,7 @@
 			let comps = await response.json();
 			comps = comps.predictions.map((p) => p.text);
 			comps = comps.sort().filter(onlyUnique);
-			console.log('comps', comps);
+			//console.log('comps', comps);
 			return comps;
 		} else {
 			const message = `Error: ${response.status}`;
@@ -332,7 +359,6 @@
 
 	async function getCompletions(term) {
 		try {
-			console.log('term', term);
 			let url = "https://api.typewise.ai/latest/completion/complete";
 			const response = await fetch(url, {
 				mode: "cors",
@@ -365,15 +391,29 @@
 			throw error; // Re-throw the error to be handled by the caller
 		}
 	}
-
+	$: {
+		console.log('here');
+		console.log($categoryWritable);
+		categoryArr = new Array(...$categoryWritable.keys());
+	}
 	$: {
 		// look in personal library
 		searchKey = searchTerm.toLowerCase();
-		console.log('search', searchKey);
+		//console.log('search', searchKey);
 		// find and sort the phrases in the personal library starting with the search term
 		startsWith = $phrases
 			.filter((phrase) => phrase.toLowerCase().startsWith(searchKey))
-			.filter(onlyUnique);
+			.filter(onlyUnique)
+		if (currCategory) {
+			console.log(currCategory);
+			console.log($categoryWritable);
+			console.log(categoryArr);
+			startsWith =startsWith.filter((phrase) => $categoryWritable.get(currCategory).has(phrase));
+		}
+
+		console.log('here');
+		console.log($categoryWritable);
+		categoryArr = new Array(...$categoryWritable.keys());
 
 		// create a new array containing the remaining part of each phrase after removal of the search term
 		keylength = searchKey.length;
@@ -421,7 +461,7 @@
 				if (lastWord && nc[i]) {
 					ncObjects.push(removeLastWord(nc[i], lastWord));
 				} else {
-					console.log(lastWord, nc[i]);
+					//console.log(lastWord, nc[i]);
 				}
 			}
             starters = ncObjects.concat(starters); 
@@ -463,7 +503,6 @@
 	}
 
 	function removeLastWord(text, lastWord) {
-		console.log(lastWord);
 		if (lastWord.length <= text.length && text.substring(0, lastWord.length) == lastWord) {
 			return [text.slice(lastWord.length), "continue"];
 		} else {
@@ -676,6 +715,15 @@
 								}}
 							>Save</button>
 						{/if}
+						<select class='categorySelect' id='categorySelect' on:change={handleCategoryChange}>
+							<option class='defaultOption'>{defaultCategory}</option>
+							<option class='customOption'>Custom Phrase</option>
+							{#if categoryArr}
+								{#each categoryArr as category}
+									<option value={category}>{category}</option>
+								{/each}
+							{/if}
+						</select>
 						{#if undoShown}
 							<button
 							id="undoButton"
