@@ -91,16 +91,19 @@
 	function speakNow(txt) {
 		var msg = new SpeechSynthesisUtterance();
 		msg.text = txt;
-		/*const englishMaleVoices = voices.filter(voice => 
-			voice.lang.startsWith('en') && voice.gender === 'male' 
-		);
-		if (englishMaleVoices.length > 0) {
-			msg.voice = englishMaleVoices[0];
-		}*/
-		console.log('before', msg.voice);
-		msg.voice = voices.get('Aaron');
-		//msg.voice = voices.get('Arthur');
-		console.log('after', msg.voice)
+		console.log('before', msg);
+		if (voices) {
+			console.log('voices!');
+		}
+		if (!voices) {
+			console.error('voices not on');
+		}
+		if (femaleVoice) {
+			msg.voice = voices.get('Samantha');
+		} else {
+			msg.voice = voices.get('Aaron');
+		}
+		console.log('after', msg)
 		window.speechSynthesis.speak(msg);
 		searchTerm = '';
 	}
@@ -113,7 +116,6 @@
 		voices.set('Albert', allVoices[2]);
 		voices.set('Arthur', allVoices[8]);
 		voices.set('Catherine', allVoices[15]);
-		console.log('voices', voices);
 	}
 
 	function toggleFullScreen() {
@@ -134,7 +136,8 @@
 	}
 
 	function switchVoice() {
-		femaleVoice = !femalVoice;
+		femaleVoice = !femaleVoice;
+
 	}
 
 	async function handleKeydown(e){
@@ -219,10 +222,8 @@
 	}
 
 	function handleSelectReplacement(prediction) {
-		//console.log('prediction', prediction);
 		prediction[0] = prediction[0].replace(/-/g, ' ');
 		const termArr = searchTerm.split(' ');
-		//console.log('arr', termArr);
 		const lastWord = termArr[termArr.length - 1];
 		let beginTerm = termArr.slice(0, -2);
 		if (lastWord) {	
@@ -392,8 +393,6 @@
 		}
 	}
 	$: {
-		console.log('here');
-		console.log($categoryWritable);
 		categoryArr = new Array(...$categoryWritable.keys());
 	}
 	$: {
@@ -405,14 +404,12 @@
 			.filter((phrase) => phrase.toLowerCase().startsWith(searchKey))
 			.filter(onlyUnique)
 		if (currCategory) {
-			console.log(currCategory);
-			console.log($categoryWritable);
-			console.log(categoryArr);
+			//console.log(currCategory);
+			//console.log($categoryWritable);
+			//console.log(categoryArr);
 			startsWith =startsWith.filter((phrase) => $categoryWritable.get(currCategory).has(phrase));
 		}
 
-		console.log('here');
-		console.log($categoryWritable);
 		categoryArr = new Array(...$categoryWritable.keys());
 
 		// create a new array containing the remaining part of each phrase after removal of the search term
@@ -453,7 +450,7 @@
             let nc = await getCompletions(searchTerm); 
 			const ncLength = Math.max(allowedLength, nc.length);
 			let ncObjects = [];
-			console.log(nc);
+			//console.log(nc);
 			for (let i = 0; i < ncLength; i++) {
 				if (nc[i]) {
 					nc[i] = removeDoubleHyphens(nc[i]);
@@ -465,14 +462,13 @@
 				}
 			}
             starters = ncObjects.concat(starters); 
-            console.log('start', starters);
+            //console.log('start', starters);
 		}
 	}
 
 	async function fetchAndAddCompletions(searchTerm) {
         if (starters.length < 2) {
 			const termArr = searchTerm.split(' ');
-			console.log('arr', termArr);
 			const lastWord = termArr[termArr.length - 1];
 			//const beginTerm = termArr.slice(0, -1);
 			//console.log('begin', lastWord);
@@ -481,7 +477,6 @@
 				nc[i] = replaceHyphens(nc[i]);
 				/*nc[i] = removeDoubleHyphens(nc[i]);
 				if (lastWord) {
-					console.log('here', nc[i]);
 					nc[i] = removeLastWord(nc[i], lastWord);
 				}*/
 			}
@@ -489,7 +484,6 @@
 				return [completion, 0]
 			});
             starters = ncObjects.concat(starters); 
-            console.log('start', starters);
         }
     }
 
