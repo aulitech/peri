@@ -1,5 +1,5 @@
 <script>
-	import { categoryWritable, fetchCards, phrases, categoryMap, savePhrases, initializeApp, undoAddPhrase, getPhraseFromDB, deletePhraseFromDB, addPhrase, setDefaultPhrases, getTrigramsFromDB } from '../cardstore';
+	import { addPhraseWithTag, categoryWritable, tagWritable, fetchCards, phrases, categoryMap, savePhrases, initializeApp, undoAddPhrase, getPhraseFromDB, deletePhraseFromDB, addPhrase, setDefaultPhrases, getTrigramsFromDB } from '../cardstore';
 	import Record from '../components/record.svelte';
 	import Text from '../components/text.svelte';
 	import Speak from '../components/speak.svelte';
@@ -29,8 +29,11 @@
 	let voices = new Map();
 	let femaleVoice = true;
 	let currCategory;
+	let currTag;
 	let categoryArr = [];
-	const defaultCategory = 'Choose Category';
+	let tagArr = [];
+	const defaultCategory = 'Select Category';
+	const defaultTag = 'Select Tag';
 
     function showUndoButton() {
         undoShown = true;
@@ -56,11 +59,6 @@
 				populateVoices();
 			};
 		}
-		console.log('map', categoryMap);
-		categoryArr = new Array(...categoryMap.keys());
-		//categoryArr = new Array(...$categoryWritable.keys());
-		console.log(categoryArr);
-		//populateCategorySelect(categoryArr);
 
         window.addEventListener('click', handleClickOutside);
 
@@ -85,6 +83,15 @@
 			currCategory = null;
 		} else {	
 			currCategory = event.target.value;
+		}
+	}
+
+	function handleTagChange(event) {
+		const selectedTag = event.target.value;
+		if (selectedTag === defaultTag) {
+			currTag = null;
+		} else {
+			currTag = event.target.value;
 		}
 	}
 
@@ -137,7 +144,6 @@
 
 	function switchVoice() {
 		femaleVoice = !femaleVoice;
-
 	}
 
 	async function handleKeydown(e){
@@ -153,7 +159,11 @@
 	}
 
 	function handleAddPhrase(userInput = document.getElementById('txt').value){
-		addPhrase(userInput);
+		if (userInput.includes('#')) {
+			addPhraseWithTag(userInput);
+		} else {
+			addPhrase(userInput);
+		}
 		undoShown = true;
 		initialUndoClick = true;
 		searchTerm = '';
@@ -393,9 +403,6 @@
 		}
 	}
 	$: {
-		categoryArr = new Array(...$categoryWritable.keys());
-	}
-	$: {
 		// look in personal library
 		searchKey = searchTerm.toLowerCase();
 		//console.log('search', searchKey);
@@ -404,13 +411,15 @@
 			.filter((phrase) => phrase.toLowerCase().startsWith(searchKey))
 			.filter(onlyUnique)
 		if (currCategory) {
-			//console.log(currCategory);
-			//console.log($categoryWritable);
-			//console.log(categoryArr);
 			startsWith =startsWith.filter((phrase) => $categoryWritable.get(currCategory).has(phrase));
+		}
+		if (currTag) {
+			startsWith =startsWith.filter((phrase) => $tagWritable.get(currTag).has(phrase));
 		}
 
 		categoryArr = new Array(...$categoryWritable.keys());
+		tagArr = new Array(...$tagWritable.keys());
+
 
 		// create a new array containing the remaining part of each phrase after removal of the search term
 		keylength = searchKey.length;
@@ -435,6 +444,7 @@
 		}, {});
 		// Sort the starters
 		starters = Object.entries(nextWord).sort((a, b) => b[1] - a[1]);
+		if (!searchTerm) starters.unshift(['Alexa, ', 0]);
 		if (replaceVersion) {
 			fetchAndAddCompletions(searchKey);
 		} else {
@@ -709,6 +719,14 @@
 								}}
 							>Save</button>
 						{/if}
+						<select class='tagSelect' id='tagSelect' on:change={handleTagChange}>
+							<option class='defaultOption'>{defaultTag}</option>
+							{#if tagArr}
+								{#each tagArr as tag}
+									<option value={tag}>{tag}</option>
+								{/each}
+							{/if}
+						</select>
 						<select class='categorySelect' id='categorySelect' on:change={handleCategoryChange}>
 							<option class='defaultOption'>{defaultCategory}</option>
 							<option class='customOption'>Custom Phrase</option>

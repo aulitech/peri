@@ -2,6 +2,7 @@ import { writable } from 'svelte/store';
 import { initializeModel, readSubtitlesFromFile, getTrigrams, fetchSubtitlesFromFile, getPredictions } from './prediction';
 export const phrases = writable([]);
 export const categoryWritable = writable(new Map());
+export const tagWritable = writable(new Map());
 import data from '$lib/phrasetable.json';
 const phrasefile = "myphrases.json"
 
@@ -12,7 +13,9 @@ let defaultPhrases = data.phrases.map(phrase => makePhrases(phrase).phrase);
 defaultPhrases = defaultPhrases.sort().map(phrase => phrase.trim()).filter(onlyUnique);
 let phrasesWithCategories = data.phrases.map(makePhrases);
 //console.log(phrasesWithCategories);
+const customPhraseName = "Custom Phrase";
 export let categoryMap = new Map();
+export let tagMap = new Map();
 populateCategoryMap();
 
 let aliases = []
@@ -35,10 +38,11 @@ function populateCategoryMap() {
             categoryMap.set(phraseObj.category, new Set([phraseObj.phrase]));
         }
     }
-    if (!categoryMap.has("Custom Phrase")) {
-        categoryMap.set("Custom Phrase", new Set());
+    if (!categoryMap.has(customPhraseName)) {
+        categoryMap.set(customPhraseName, new Set());
     }
 }
+
 
 function onlyUnique(value, index, self) {
     return self.indexOf(value) === index;
@@ -117,7 +121,9 @@ export async function initializeApp(){
         handleTimeStamps(database);
         updatePhrasesfromDB();
         populateCategoriesFromDB();
-        console.log(categoryMap)
+        populateTagsFromDB();
+        console.log(categoryMap);
+        console.log('tags', tagMap);
     } catch(error) {
         console.error('Database initialization error:', error);
     }
@@ -143,7 +149,7 @@ async function openDatabase() { //get rid of phrases argument
         let phraseDBEmpty = false;
         db = event.target.result;
         const existingObjectStores = Array.from(db.objectStoreNames);
-        if (!existingObjectStores.includes("phrases") || !existingObjectStores.includes("timeStamps") || (!existingObjectStores.includes("trigrams") && trigramsRequested) || (!existingObjectStores.includes("addedPhrases"))) {
+        if (!existingObjectStores.includes("phrases") || !existingObjectStores.includes("timeStamps") || (!existingObjectStores.includes("trigrams") && trigramsRequested) || (!existingObjectStores.includes("addedPhrases")) || (!existingObjectStores.includes("tags"))) {
           db.close(); // Close the current connection
           const upgradeRequest = indexedDB.open(dbName, db.version + 1); // Increment the version to trigger onupgradeneeded
   
@@ -168,6 +174,9 @@ async function openDatabase() { //get rid of phrases argument
             }
             if (!db.objectStoreNames.contains("addedPhrases")) {
                 db.createObjectStore("addedPhrases", {keyPath: "phrase"});
+            }
+            if (!db.objectStoreNames.contains("tags")) {
+                db.createObjectStore("tags", {keyPath: "tag"});
             }
           };
   
@@ -253,6 +262,29 @@ async function populateCategoriesFromDB() {
                 categoryMap.set(phraseObj.category, categorySet);
             } else {
                 categoryMap.set(phraseObj.category, new Set([phraseObj.phrase]));
+            }
+        }
+    };
+}
+
+async function populateTagsFromDB() {
+    const transaction = db.transaction(["addedPhrases"], 'readwrite');
+    const phraseStore = transaction.objectStore("addedPhrases");
+    const request = phraseStore.getAll();
+    request.onsuccess = (event) => {
+        const addedPhrases = event.target.result;
+        console.log('add', addedPhrases);
+        for (const phraseObj of addedPhrases) {
+            console.log(phraseObj);
+            for (const tag of phraseObj.tags) {
+                if (tagMap.has(tag)) {
+                    let tagSet = tagMap.get(tag);
+                    tagSet.add(tag);
+                    tagMap.set(tag, tagSet);
+                } else {
+                    console.log(phraseObj.phrase);
+                    tagMap.set(tag, new Set([phraseObj.phrase]));
+                }
             }
         }
     };
@@ -344,17 +376,68 @@ async function getAllTimeStamps(db, maxAgeDays = 7) {
     });
 }
 
-export function addPhrase(phrase, category = 'Custom Phrase') {
+function addPhraseToTagMap(phrase, tags) {
+    for (const tag of tags) {
+        if (tagMap.has(tag)) {
+            const currTag = tagMap.get(tag);
+            currTag.add(phrase);
+            tagMap.set(tag, currTag);
+        } else {
+            tagMap.set(tag, new Set([phrase]));
+        }
+        console.log(tag);
+    }
+    console.log(tagMap);
+}
+
+export function addPhrase(phrase, metaData = {category: customPhraseName, tags: []}) {
+    const category = metaData.category;
+    const tags = metaData.tags;
     addPhraseToDB(phrase);
     addTimeStampToDB(phrase);
     if (!defaultPhrases.includes(phrase)) {
-        console.log('not', phrase);
+        console.log(tags);
+        addPhraseToTagMap(phrase, tags);
         addPhraseToCategoryMap(phrase, category);
-        addPhraseToAddedPhrases({ phrase:phrase, category: category });
+        addPhraseToAddedPhrases({ phrase:phrase, category: category, tags: tags });
     }
     getPredictionsFromDB(phrase);
     updatePhrasesfromDB();
     //console.log('map', categoryMap);
+}
+
+export function addPhraseWithTag(tagPhrase) {
+    const phraseWords = tagPhrase.split(' ');
+    let formattedPhraseArr = [];
+    let tags = [];
+    let endTagged = true;
+    console.log(tagPhrase);
+    for (let i = phraseWords.length - 1; i >= 0; i--) {
+        if (phraseWords[i].length > 0 && phraseWords[i].charAt(0) === '#' && endTagged) { //make sure word exists
+            tags.unshift(phraseWords[i]); // maybe push to improve performance (but reverse order)
+        } else if (phraseWords[i].length > 0 && phraseWords[i].charAt(0) === '#') {
+            tags.unshift(phraseWords[i]);
+            formattedPhraseArr.unshift(phraseWords[i].substring(1));
+        } else {
+            endTagged = false;
+            formattedPhraseArr.unshift(phraseWords[i]);
+        }
+    }
+    const formattedPhrase = formattedPhraseArr.join(' ');
+    console.log('tags', tags);
+    console.log('format', formattedPhrase);
+    addTagsToDB(tags);
+    const metaDataObj = {category: customPhraseName, tags: tags};
+    addPhrase(formattedPhrase, metaDataObj);
+}
+
+async function addTagsToDB(newTags) {
+    const transaction = db.transaction(["tags"], "readwrite");
+    const tagStore = transaction.objectStore("tags");
+    for (const tag of newTags) {
+        await tagStore.put({tag: tag});
+    }
+    //console.log(await getAllOfStore(tagStore));
 }
 
 async function getPredictionsFromDB(searchTerm) {
@@ -541,7 +624,7 @@ async function updatePhrasesfromDB(){
     const newPhrases = await getSortedPhrases();
     phrases.set(newPhrases);
     categoryWritable.set(categoryMap);
-    console.log('here1', categoryWritable);
+    tagWritable.set(tagMap);
 }
 
 export async function getPhraseFromDB(phrase){
