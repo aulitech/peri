@@ -406,7 +406,7 @@ export function addPhrase(phrase, metaData = {category: customPhraseName, tags: 
     //console.log('map', categoryMap);
 }
 
-export function addPhraseWithTag(tagPhrase) {
+export function getTagsAndFormatPhrase(tagPhrase) {
     const phraseWords = tagPhrase.split(' ');
     let formattedPhraseArr = [];
     let tags = [];
@@ -424,6 +424,30 @@ export function addPhraseWithTag(tagPhrase) {
         }
     }
     const formattedPhrase = formattedPhraseArr.join(' ');
+    return [tags, formattedPhrase];
+}
+
+export function addPhraseWithTag(tagPhrase) {
+    const formattedObject = getTagsAndFormatPhrase(tagPhrase);
+    const tags = formattedObject[0];
+    const formattedPhrase = formattedObject[1];
+    /*const phraseWords = tagPhrase.split(' ');
+    let formattedPhraseArr = [];
+    let tags = [];
+    let endTagged = true;
+    console.log(tagPhrase);
+    for (let i = phraseWords.length - 1; i >= 0; i--) {
+        if (phraseWords[i].length > 0 && phraseWords[i].charAt(0) === '#' && endTagged) { //make sure word exists
+            tags.unshift(phraseWords[i]); // maybe push to improve performance (but reverse order)
+        } else if (phraseWords[i].length > 0 && phraseWords[i].charAt(0) === '#') {
+            tags.unshift(phraseWords[i]);
+            formattedPhraseArr.unshift(phraseWords[i].substring(1));
+        } else {
+            endTagged = false;
+            formattedPhraseArr.unshift(phraseWords[i]);
+        }
+    }
+    const formattedPhrase = formattedPhraseArr.join(' ');*/
     console.log('tags', tags);
     console.log('format', formattedPhrase);
     addTagsToDB(tags);

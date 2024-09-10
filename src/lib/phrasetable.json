@@ -19675,6 +19675,123 @@
             "language": "en",
             "audio": {},
             "count": 0
+        },
+        {
+            "txt":"Alexa, help.",
+            "id": 2171,
+            "image": "",
+            "category": "Alexa",
+            "language": "en",
+            "audio": {},
+            "count": 0
+        },
+        {
+            "txt":"Alexa, mute.",
+            "id": 2171,
+            "image": "",
+            "category": "Alexa",
+            "language": "en",
+            "audio": {},
+            "count": 0
+        },
+        {
+            "txt":"Alexa, unmute.",
+            "id": 2171,
+            "image": "",
+            "category": "Alexa",
+            "language": "en",
+            "audio": {},
+            "count": 0
+        },
+        {
+            "txt":"Alexa, set volume to [5].",
+            "id": 2171,
+            "image": "",
+            "category": "Alexa",
+            "language": "en",
+            "audio": {},
+            "count": 0
+        },
+        {
+            "txt":"Alexa, louder.",
+            "id": 2171,
+            "image": "",
+            "category": "Alexa",
+            "language": "en",
+            "audio": {},
+            "count": 0
+        },
+        {
+            "txt":"Alexa, softer.",
+            "id": 2171,
+            "image": "",
+            "category": "Alexa",
+            "language": "en",
+            "audio": {},
+            "count": 0
+        },
+        {
+            "txt":"Alexa, turn up the volume.",
+            "id": 2171,
+            "image": "",
+            "category": "Alexa",
+            "language": "en",
+            "audio": {},
+            "count": 0
+        },
+        {
+            "txt":"Alexa, volume [1-10].",
+            "id": 2171,
+            "image": "",
+            "category": "Alexa",
+            "language": "en",
+            "audio": {},
+            "count": 0
+        },
+        {
+            "txt":"Alexa, enable [skill].",
+            "id": 2171,
+            "image": "",
+            "category": "Alexa",
+            "language": "en",
+            "audio": {},
+            "count": 0
+        },
+        {
+            "txt":"Alexa, disable [skill]..",
+            "id": 2171,
+            "image": "",
+            "category": "Alexa",
+            "language": "en",
+            "audio": {},
+            "count": 0
+        },
+        {
+            "txt":"Alexa, open [skill].",
+            "id": 2171,
+            "image": "",
+            "category": "Alexa",
+            "language": "en",
+            "audio": {},
+            "count": 0
+        },
+        {
+            "txt":"Alexa, help.",
+            "id": 2171,
+            "image": "",
+            "category": "Alexa",
+            "language": "en",
+            "audio": {},
+            "count": 0
+        },
+        {
+            "txt":"Alexa, help.",
+            "id": 2171,
+            "image": "",
+            "category": "Alexa",
+            "language": "en",
+            "audio": {},
+            "count": 0
         }
     ]
 }

@@ -2406,6 +2406,25 @@
             { "id": -1, "audio": [{ "language": "EN", "voice": "default", "url": "" }], "phrase": "You're kidding" },
             { "id": -1, "audio": [{ "language": "EN", "voice": "default", "url": "" }], "phrase": "You've got that right" }
         ]
+    }, 
+    {
+        "category": "Alexa",
+        "id": 42,
+        "phrases": [
+            {"phrase":"Alexa, help."},
+            {"phrase":"Alexa, mute."},
+            {"phrase":"Alexa, unmute."},
+            {"phrase":"Alexa, set volume to [5]."},
+            {"phrase":"Alexa, louder."},
+            {"phrase":"Alexa, softer."},
+            {"phrase":"Alexa, turn up the volume."},
+            {"phrase":"Alexa, volume [1-10]."},
+            {"phrase":"Alexa, enable [skill]."},
+            {"phrase":"Alexa, disable [skill].."},
+            {"phrase":"Alexa, open [skill]."},
+            {"phrase":"Alexa, help."},
+            {"phrase":"Alexa, help."}
+        ]
     }
 
 ]

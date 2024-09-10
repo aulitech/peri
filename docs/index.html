@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <link rel="icon" href="./favicon.png" />
     <meta name="viewport" content="width=device-width initial-scale=1" /> <meta http-equiv="content-security-policy" content=""><title>Peri</title><!-- HEAD_svelte-1xdvwk6_START --><!-- HEAD_svelte-1xdvwk6_END -->
-	<link href="./_app/immutable/assets/_layout-6b317c4b.css" rel="stylesheet">
-	<link href="./_app/immutable/assets/_page-c4bb0fed.css" rel="stylesheet">
-	<link rel="modulepreload" href="./_app/immutable/start-ebb1eb74.js">
+	<link href="./_app/immutable/assets/_layout-4cf939c4.css" rel="stylesheet">
+	<link href="./_app/immutable/assets/_page-5de1eba2.css" rel="stylesheet">
+	<link rel="modulepreload" href="./_app/immutable/start-c01b87cd.js">
 	<link rel="modulepreload" href="./_app/immutable/chunks/index-e6aee225.js">
-	<link rel="modulepreload" href="./_app/immutable/chunks/singletons-8d94d0b2.js">
+	<link rel="modulepreload" href="./_app/immutable/chunks/singletons-3dcf3d37.js">
 	<link rel="modulepreload" href="./_app/immutable/chunks/index-c623f7f0.js">
 	<link rel="modulepreload" href="./_app/immutable/components/pages/_layout.svelte-0e8b2117.js">
 	<link rel="modulepreload" href="./_app/immutable/modules/pages/_layout.js-34dd7f88.js">
 	<link rel="modulepreload" href="./_app/immutable/chunks/_layout-4122f905.js">
-	<link rel="modulepreload" href="./_app/immutable/components/pages/_page.svelte-4c073964.js">
+	<link rel="modulepreload" href="./_app/immutable/components/pages/_page.svelte-724dd3f1.js">
 </head>
 
 <body class="auli-palette bg-secondary">
@@ -33,10 +33,12 @@
 		<div class="flex flex-row"><div class="flex flex-row justify-center "><button class="w-[3rem] pl-3 text-secondary hover:text-primary"><!-- HTML_TAG_START --><svg  class="h-6 w-6" viewBox="0 0 512 512"><path fill="currentColor" d="M512 256C512 114.6 397.4 0 256 0S0 114.6 0 256S114.6 512 256 512s256-114.6 256-256zM116.7 244.7l112-112c4.6-4.6 11.5-5.9 17.4-3.5s9.9 8.3 9.9 14.8l0 64 96 0c17.7 0 32 14.3 32 32l0 32c0 17.7-14.3 32-32 32l-96 0 0 64c0 6.5-3.9 12.3-9.9 14.8s-12.9 1.1-17.4-3.5l-112-112c-6.2-6.2-6.2-16.4 0-22.6z"/></svg><!-- HTML_TAG_END --></button></div>
 			<div class="grow pr-12 flex flex-col"><div class="flex space-x-2"><div class="p-2 w-full rounded-md text-3xl outline-none border-none bg-primary text-primary"><label for="txt"></label>
 							<input type="search" id="txt" name="txt" class="p-2 text-3xl outline-none border-none bg-primary text-primary" style="min-width:312px" placeholder="Type a phrase" size="0" value="">
-							<button id="speakButton" class="w-40 border border-black rounded-md bg-blue-500 hover:text-primary hover:bg-secondary">Speak</button>
-							<button id="saveButton" class="w-40 border border-black rounded-md bg-green-500 hover:text-primary hover:bg-secondary">Save</button>
-						<select class="tagSelect" id="tagSelect"><option class="defaultOption" value="Select Tag">Select Tag</option></select>
-						<select class="categorySelect" id="categorySelect"><option class="defaultOption" value="Select Category">Select Category</option><option class="customOption" value="Custom Phrase">Custom Phrase</option></select>
+							<button id="speakButton" class="w-40 border border-black rounded-md bg-blue-500 hover:text-primary hover:bg-secondary svelte-qcn9ml">Speak</button>
+							<button id="saveButton" class="w-40 border border-black rounded-md hover:text-primary hover:bg-secondary svelte-qcn9ml">Save</button>
+						<select class="dropdown svelte-qcn9ml" id="tagSelect"><option class="defaultOption" value="Select Tag">Select Tag</option></select>
+						<select class="dropdown svelte-qcn9ml" id="categorySelect" style="overflow-visible h-auto"><option class="defaultOption" value="Select Category">Select Category</option><option class="customOption" value="Custom Phrase">Custom Phrase</option></select>
+
+						
 						</div>
 					
 
@@ -44,16 +46,16 @@
 		<div class="p-2 flex flex-row justify-evenly text-primary" style="width: 90%"><button class="text-2xl w-[3rem] text-secondary hover:text-primary"><!-- HTML_TAG_START --><svg class="h-6 w-6" viewBox="0 0 512 512"><path fill="currentColor" d="M11.5 280.6l192 160c20.6 17.2 52.5 2.8 52.5-24.6V96c0-27.4-31.9-41.8-52.5-24.6l-192 160c-15.3 12.8-15.3 36.4 0 49.2zm256 0l192 160c20.6 17.2 52.5 2.8 52.5-24.6V96c0-27.4-31.9-41.8-52.5-24.6l-192 160c-15.3 12.8-15.3 36.4 0 49.2z"/></svg><!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] text-secondary hover:text-primary"><!-- HTML_TAG_START --><svg class="h-6 w-6" viewBox="0 0 640 512"><path fill="currentColor" d="M576 64H205.26A63.97 63.97 0 0 0 160 82.75L9.37 233.37c-12.5 12.5-12.5 32.76 0 45.25L160 429.25c12 12 28.28 18.75 45.25 18.75H576c35.35 0 64-28.65 64-64V128c0-35.35-28.65-64-64-64zm-84.69 254.06c6.25 6.25 6.25 16.38 0 22.63l-22.62 22.62c-6.25 6.25-16.38 6.25-22.63 0L384 301.25l-62.06 62.06c-6.25 6.25-16.38 6.25-22.63 0l-22.62-22.62c-6.25-6.25-6.25-16.38 0-22.63L338.75 256l-62.06-62.06c-6.25-6.25-6.25-16.38 0-22.63l22.62-22.62c6.25-6.25 16.38-6.25 22.63 0L384 210.75l62.06-62.06c6.25-6.25 16.38-6.25 22.63 0l22.62 22.62c6.25 6.25 6.25 16.38 0 22.63L429.25 256l62.06 62.06z"/></svg><!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] text-secondary hover:text-primary"><!-- HTML_TAG_START --><svg class="h-6 w-6"  viewBox="0 0 448 512"><path fill="currentColor" d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"/></svg><!-- HTML_TAG_END --></button>
 			<button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->a<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->b<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->c<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->d<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->e<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->f<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->g<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->h<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->i<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->j<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->k<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->l<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->m<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->n<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->o<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->p<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->q<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->r<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->s<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->t<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->u<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->v<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->w<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->x<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->y<!-- HTML_TAG_END --></button><button class="text-2xl w-[3rem] rounded-full font-bold text-secondary hover:text-primary hover:bg-secondary"><!-- HTML_TAG_START -->z<!-- HTML_TAG_END --></button></div>
 
-		<div class="max-h-24 flex flex-row flex-wrap overflow-hidden"><button class="pl-4 pr-4 pt-2 pb-2 min-w-[4rem] rounded-full text-2xl text-tertiary hover:text-primary hover:bg-secondary">Alexa, </button></div></div>
+		<div class="max-h-24 flex flex-row flex-wrap overflow-hidden"></div></div>
 	<div class="flex max-h-[70vh] w-full flex-col bg-secondary justify-center"><div class="w-full p-8 flex flex-row flex-wrap gap-2 overflow-y-auto">
 			</div></div>
 
-	<footer class="h-[8%] w-full min-h-12 bg-primary fixed left-0 bottom-0 p-4 flex flex-row justify-evenly items-center"><button type="button" class="p-2 font-bold text-md rounded-md shadow-md hover:bg-tertiary hover:shadow-lg transition duration-150 ease-in-out">Bathroom</button><button type="button" class="p-2 font-bold text-md rounded-md shadow-md hover:bg-tertiary hover:shadow-lg transition duration-150 ease-in-out">Food</button><button type="button" class="p-2 font-bold text-md rounded-md shadow-md hover:bg-tertiary hover:shadow-lg transition duration-150 ease-in-out">Pain</button><button type="button" class="p-2 font-bold text-md rounded-md shadow-md hover:bg-tertiary hover:shadow-lg transition duration-150 ease-in-out">Help</button></footer>
+	<footer class="h-[8%] w-full min-h-12 bg-primary fixed left-0 bottom-0 p-4 flex flex-row justify-evenly items-center"><button type="button" class="p-2 font-bold text-md rounded-md shadow-md hover:bg-tertiary hover:shadow-lg transition duration-150 ease-in-out" value="Ice Breakers">Ice Breakers</button><button type="button" class="p-2 font-bold text-md rounded-md shadow-md hover:bg-tertiary hover:shadow-lg transition duration-150 ease-in-out" value="Ask Help">Ask Help</button><button type="button" class="p-2 font-bold text-md rounded-md shadow-md hover:bg-tertiary hover:shadow-lg transition duration-150 ease-in-out" value="Social Requests">Social Requests</button><button type="button" class="p-2 font-bold text-md rounded-md shadow-md hover:bg-tertiary hover:shadow-lg transition duration-150 ease-in-out" value="Custom Phrase">Custom Phrase</button><button type="button" class="p-2 font-bold text-md rounded-md shadow-md hover:bg-tertiary hover:shadow-lg transition duration-150 ease-in-out" value="All Phrases">All Phrases</button></footer>
 </div></div>
 
 
-		<script type="module" data-sveltekit-hydrate="15687tf">
-		import { start } from "./_app/immutable/start-ebb1eb74.js";
+		<script type="module" data-sveltekit-hydrate="1l8ovab">
+		import { start } from "./_app/immutable/start-c01b87cd.js";
 
 		start({
 			env: {},
@@ -67,7 +69,7 @@
 				form: null
 			},
 			paths: {"base":"","assets":""},
-			target: document.querySelector('[data-sveltekit-hydrate="15687tf"]').parentNode,
+			target: document.querySelector('[data-sveltekit-hydrate="1l8ovab"]').parentNode,
 			trailing_slash: "never"
 		});
 	</script>

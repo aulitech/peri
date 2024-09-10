@@ -1,5 +1,5 @@
 <script>
-	import { addPhraseWithTag, categoryWritable, tagWritable, fetchCards, phrases, categoryMap, savePhrases, initializeApp, undoAddPhrase, getPhraseFromDB, deletePhraseFromDB, addPhrase, setDefaultPhrases, getTrigramsFromDB } from '../cardstore';
+	import { addPhraseWithTag, categoryWritable, tagWritable, getTagsAndFormatPhrase, fetchCards, phrases, categoryMap, savePhrases, initializeApp, undoAddPhrase, getPhraseFromDB, deletePhraseFromDB, addPhrase, setDefaultPhrases, getTrigramsFromDB } from '../cardstore';
 	import Record from '../components/record.svelte';
 	import Text from '../components/text.svelte';
 	import Speak from '../components/speak.svelte';
@@ -8,6 +8,7 @@
 	import { onMount } from 'svelte';
 	//import { voiceMap } from '../lib/voices.js';
 
+	let triedOnce = 0;
 	let searchTerm = '';
 	let startsWith = [];
 	let contains = [];
@@ -24,8 +25,8 @@
 	let initialUndoClick = false;
 	let settingsShown = false;
 	let buttonVersion = false;
-	let replaceVersion = false;
-	let versionColor = 'red';
+	let replaceVersion = true;
+	let versionColor = 'white'; //red
 	let voices = new Map();
 	let femaleVoice = true;
 	let currCategory;
@@ -34,6 +35,15 @@
 	let tagArr = [];
 	const defaultCategory = 'Select Category';
 	const defaultTag = 'Select Tag';
+	let apiCounter = 0;
+	export let options = [];
+	let selectedValue;
+	let isDropdownOpen = false;
+
+	function toggleDropdown() {
+		console.log(isDropdownOpen);
+		isDropdownOpen = !isDropdownOpen;
+	}
 
     function showUndoButton() {
         undoShown = true;
@@ -77,12 +87,22 @@
 		});
 	}
 
+	function handleCategoryOption(newCategory) {
+		if (newCategory === 'All Categories') {
+			currCategory = null;
+		} else {
+			currCategory = newCategory;
+		}
+	}
+
 	function handleCategoryChange(event) {
+		console.log(event);
 		const selectedCategory = event.target.value;
-		if (selectedCategory === defaultCategory) {
+		console.log('select', selectedCategory);
+		if (selectedCategory === defaultCategory || selectedCategory === 'All Phrases') {
 			currCategory = null;
 		} else {	
-			currCategory = event.target.value;
+			currCategory = selectedCategory;
 		}
 	}
 
@@ -91,7 +111,7 @@
 		if (selectedTag === defaultTag) {
 			currTag = null;
 		} else {
-			currTag = event.target.value;
+			currTag = selectedTag;
 		}
 	}
 
@@ -135,11 +155,11 @@
 
 	function switchPredictionVersion() {
 		replaceVersion = !replaceVersion;
-		if (versionColor === 'red') {
+		/*if (versionColor === 'red') { //bring back later
 			versionColor = 'white';
 		} else {
 			versionColor = 'red';
-		}
+		}*/
 	}
 
 	function switchVoice() {
@@ -156,6 +176,36 @@
 		if(e.key == 'option'){
 			deletePhrase(enteredPhrase);
 		}
+	}
+
+	/*function handleHoverSelect(){
+		console.log('selectHovered');
+		const selectDropdown = document.getElementById('categorySelect');
+		console.log(selectDropdown);
+		selectDropdown.click();
+		selectDropdown.size = categoryArr.length;
+	}*/
+	function handleHoverSelect() {
+		const selectDropdown = document.getElementById('categorySelect');
+
+		if (selectDropdown) {
+			clearTimeout(dwellTimer);
+			dwellTimer = setTimeout(() => {
+				const event = new MouseEvent('click', {
+					bubbles: true,
+					cancelable: true,
+					view: window
+				});
+				selectDropdown.dispatchEvent(event);
+				console.log(event);
+			}, dwellInterval);
+		}
+	}
+
+	function handleHoverLeave(){
+		const selectDropdown = document.getElementById('categorySelect');
+		selectDropdown.size = 1;
+		console.log(selectDropdown);
 	}
 
 	function handleAddPhrase(userInput = document.getElementById('txt').value){
@@ -196,12 +246,14 @@
 	}
 
 	function handleSpeakButton(userInput = document.getElementById("txt").value){
-		speakNow(userInput);
+		const formattedInput = getTagsAndFormatPhrase(userInput)[1];
+		speakNow(formattedInput);
 		handleAddPhrase(userInput);
 	}
 
-	function togglePause() {
+	async function togglePause() {
         isPaused = !isPaused;
+		console.log('here', await getCompletions('hey there'))
     }
 
 	function openSettings() {
@@ -334,43 +386,11 @@
 		return self.indexOf(value) === index;
 	}
 
-	async function fetchCompletions(term) {
-		let url = 'https://api.typewise.ai/latest/completion/complete';
-		const response = await fetch(url, {
-			mode: 'cors', // no-cors, *cors, same-origin
-			cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-			//credentials: 'same-origin', // include, *same-origin, omit
-			headers: {
-				'Content-Type': 'application/json'
-				// 'Content-Type': 'application/x-www-form-urlencoded',
-			},
-			redirect: 'follow', // manual, *follow, error
-			//referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-			method: 'POST',
-			body: JSON.stringify({
-				token: 'string',
-				languages: ['en'],
-				text: term,
-				correctTypoInPartialWord: false,
-				maxNumberOfPredictions: 20
-			})
-		});
-
-		if (response.ok) {
-			let comps = await response.json();
-			comps = comps.predictions.map((p) => p.text);
-			comps = comps.sort().filter(onlyUnique);
-			//console.log('comps', comps);
-			return comps;
-		} else {
-			const message = `Error: ${response.status}`;
-			throw new Error(message);
-		}
-	}
-
 	async function getCompletions(term) {
 		try {
-			let url = "https://api.typewise.ai/latest/completion/complete";
+			//validateToken('string');
+			let url = 'https://api.typewise.ai/latest/completion/complete';
+    		const proxyUrl = 'https://cors-anywhere.herokuapp.com/'; // CORS proxy URL
 			const response = await fetch(url, {
 				mode: "cors",
 				cache: "no-cache",
@@ -389,6 +409,7 @@
 			});
 
 			if (response.ok) {
+				console.log('here5');
 				let comps = await response.json();
 				comps = comps.predictions.map((p) => p.text);
 				comps = comps.sort().filter(onlyUnique);
@@ -444,20 +465,23 @@
 		}, {});
 		// Sort the starters
 		starters = Object.entries(nextWord).sort((a, b) => b[1] - a[1]);
-		if (!searchTerm) starters.unshift(['Alexa, ', 0]);
 		if (replaceVersion) {
+			console.log('here');
 			fetchAndAddCompletions(searchKey);
 		} else {
+			console.log('here2');
 			addCompletionsRemoval(searchKey);
 		}
 	}
 
 	async function addCompletionsRemoval(searchTerm) {
+		console.log('start2', starters);
 		if (starters.length < 2) {
 			const termArr = searchTerm.split(' ');
 			const lastWord = termArr[termArr.length - 1];
 			const allowedLength = 25;
             let nc = await getCompletions(searchTerm); 
+			console.log('nc', nc);
 			const ncLength = Math.max(allowedLength, nc.length);
 			let ncObjects = [];
 			//console.log(nc);
@@ -465,34 +489,35 @@
 				if (nc[i]) {
 					nc[i] = removeDoubleHyphens(nc[i]);
 				}
-				if (lastWord && nc[i]) {
+				if (lastWord && nc[i] ) {
+					console.log('nc', nc[i]);
 					ncObjects.push(removeLastWord(nc[i], lastWord));
 				} else {
 					//console.log(lastWord, nc[i]);
 				}
 			}
+			console.log('objects', ncObjects);
             starters = ncObjects.concat(starters); 
-            //console.log('start', starters);
+            console.log('start', starters);
 		}
 	}
 
 	async function fetchAndAddCompletions(searchTerm) {
+		console.log('start3', starters);
         if (starters.length < 2) {
 			const termArr = searchTerm.split(' ');
 			const lastWord = termArr[termArr.length - 1];
-			//const beginTerm = termArr.slice(0, -1);
-			//console.log('begin', lastWord);
             let nc = await getCompletions(searchTerm); 
-			for (let i = 0; i < nc.length/*Math.min(nc.length, 25)*/; i++) {
+			for (let i = 0; i < nc.length; i++) {
 				nc[i] = replaceHyphens(nc[i]);
-				/*nc[i] = removeDoubleHyphens(nc[i]);
-				if (lastWord) {
-					nc[i] = removeLastWord(nc[i], lastWord);
-				}*/
 			}
+			console.log('first', nc.length)
+			nc = nc.filter(item => item !== lastWord);
+			console.log('second', nc.length)
 			let ncObjects = nc.map((completion) =>  {
 				return [completion, 0]
 			});
+			ncObjects
             starters = ncObjects.concat(starters); 
         }
     }
@@ -573,7 +598,7 @@
 								clearTimeout(dwellTimer);
 								switchPredictionVersion();
 							}}
-						>Switch Prediction Version</button>
+						>{#if replaceVersion}Switch To Continuation{:else}Switch To Replace{/if}</button>
 						<button
 							id="switchVoiceButton"
 							class="w-40 border border-black rounded-md bg-blue-500 hover:text-primary hover:bg-secondary"
@@ -708,7 +733,7 @@
 							>Speak</button>
 							<button
 								id="saveButton"
-								class="w-40 border border-black rounded-md bg-green-500 hover:text-primary hover:bg-secondary"
+								class="w-40 border border-black rounded-md hover:text-primary hover:bg-secondary"
 								on:mouseleave|preventDefault={() => {
 									clearTimeout(dwellTimer);
 								}}
@@ -719,7 +744,7 @@
 								}}
 							>Save</button>
 						{/if}
-						<select class='tagSelect' id='tagSelect' on:change={handleTagChange}>
+						<select class='dropdown' id='tagSelect' on:change={handleTagChange}>
 							<option class='defaultOption'>{defaultTag}</option>
 							{#if tagArr}
 								{#each tagArr as tag}
@@ -727,7 +752,7 @@
 								{/each}
 							{/if}
 						</select>
-						<select class='categorySelect' id='categorySelect' on:change={handleCategoryChange}>
+						<select class='dropdown' id='categorySelect' on:mouseenter='{handleHoverSelect}' on:mouseleave={handleHoverLeave} on:change={handleCategoryChange} style="overflow-visible h-auto">
 							<option class='defaultOption'>{defaultCategory}</option>
 							<option class='customOption'>Custom Phrase</option>
 							{#if categoryArr}
@@ -736,6 +761,47 @@
 								{/each}
 							{/if}
 						</select>
+
+						<!--<div class="dropdown" class:open={isDropdownOpen} style="display:inline-block; background-color:white; width:299px">
+							<div class="dropdown-trigger" 
+							on:click={toggleDropdown}
+							on:mouseleave|preventDefault={() => {
+								clearTimeout(dwellTimer);
+							}}
+							on:mouseenter|preventDefault={() => dwellF(toggleDropdown, dwellInterval)}>
+								{selectedValue || "Select an option"}
+							</div>
+
+							{#if isDropdownOpen}
+								<ul class="dropdown-options" style="position: absolute; background-color:white; overflow:scroll; height:500px;">
+								{#if selectedValue != 'All Categories'}
+									<li on:click={() => { selectedValue = 'All Categories'; isDropdownOpen = false; handleCategoryOption(selectedValue); }}
+									on:mouseleave|preventDefault={() => {
+										clearTimeout(dwellTimer);
+									}}
+									on:mouseenter|preventDefault={() => dwellF(() => { selectedValue = 'All Categories'; isDropdownOpen = false; handleCategoryOption(selectedValue); }, dwellInterval)}>All Categories</li>
+								{/if}
+								{#each categoryArr as option}
+									{#if option != selectedValue}
+										<li on:click={() => { selectedValue = option; handleCategoryOption(selectedValue); isDropdownOpen = false;}}
+										on:mouseleave|preventDefault={() => {
+											clearTimeout(dwellTimer);
+										}}
+										on:mouseenter|preventDefault={() => dwellF(() => { selectedValue = option; handleCategoryOption(selectedValue); isDropdownOpen = false;}, dwellInterval)}>{option}</li>
+									{/if}
+								{/each}
+								</ul>
+								<p>does this show up?<p>
+								<div class="dropdown-scroller" 
+								on:click={toggleDropdown}
+								on:mouseleave|preventDefault={() => {
+									clearTimeout(dwellTimer);
+								}}
+								on:mouseenter|preventDefault={() => dwellF(toggleDropdown, dwellInterval)}>
+									hello will this work
+								</div>
+							{/if}
+						</div>-->
 						{#if undoShown}
 							<button
 							id="undoButton"
@@ -916,10 +982,14 @@
 	<footer
 		class="h-[8%] w-full min-h-12 bg-primary fixed left-0 bottom-0 p-4 flex flex-row justify-evenly items-center"
 	>
-		{#each ['Bathroom', 'Food', 'Pain', 'Help'] as lbl}
+		{#each ['Ice Breakers', 'Ask Help', 'Social Requests', 'Custom Phrase', 'All Phrases'] as lbl}
 			<button
 				type="button"
 				class="p-2 font-bold text-md rounded-md shadow-md hover:bg-tertiary hover:shadow-lg transition duration-150 ease-in-out"
+				value={lbl}
+				on:click={handleCategoryChange}
+				on:mouseleave|preventDefault={() => { clearTimeout(dwellTimer); }}
+				on:mouseenter|preventDefault={() => dwellF(handleCategoryChange, dwellInterval)}
 				>{lbl}</button
 			>
 		{/each}
@@ -1000,5 +1070,18 @@
 
 	.settings-bottom>* {
 		margin: auto;
+	}
+
+	.dropdown {
+		background-color: #00274C;
+		color: #FFCB05;
+	}
+
+	#saveButton {
+		background-color: #006400;
+	}
+
+	#saveButton, #speakButton {
+		color: #FFCB05;
 	}
 </style>
