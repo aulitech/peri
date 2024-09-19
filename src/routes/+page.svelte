@@ -46,6 +46,7 @@
 	}
 
     function showUndoButton() {
+		//console.log(undoShown, 'shown');
         undoShown = true;
     }
 
@@ -178,13 +179,6 @@
 		}
 	}
 
-	/*function handleHoverSelect(){
-		console.log('selectHovered');
-		const selectDropdown = document.getElementById('categorySelect');
-		console.log(selectDropdown);
-		selectDropdown.click();
-		selectDropdown.size = categoryArr.length;
-	}*/
 	function handleHoverSelect() {
 		const selectDropdown = document.getElementById('categorySelect');
 
@@ -214,7 +208,7 @@
 		} else {
 			addPhrase(userInput);
 		}
-		undoShown = true;
+		setTimeout(showUndoButton, 5); //show undo after hide undo
 		initialUndoClick = true;
 		searchTerm = '';
 	}
@@ -249,6 +243,7 @@
 		const formattedInput = getTagsAndFormatPhrase(userInput)[1];
 		speakNow(formattedInput);
 		handleAddPhrase(userInput);
+		getContextCompletions(userInput);
 	}
 
 	async function togglePause() {
@@ -274,10 +269,10 @@
 	}
 
 	function handleClick(event){
-        /*const undoButton = document.getElementById('undoButton');
+        const undoButton = document.getElementById('undoButton');
 		if (undoButton) {
 			undoShown = false;
-		}*/
+		}
 		if (event.button === 2 && event.target.id == "txt"){ //right click
 			handleDeletePhrase()
 		}
@@ -386,11 +381,50 @@
 		return self.indexOf(value) === index;
 	}
 
+	async function getContextCompletions(term) {
+		try {
+			//validateToken('string');
+			let url = 'https://api.typewise.ai/latest/completion/sentence_complete';
+    		//const proxyUrl = 'https://cors-anywhere.herokuapp.com/'; // CORS proxy URL
+			const response = await fetch(url, {
+				mode: "cors",
+				cache: "no-cache",
+				headers: {
+					"Content-Type": "application/json"
+				},
+				redirect: "follow",
+				method: "POST",
+				body: JSON.stringify({
+					token: "string",
+					languages: ["en"],
+					text: term,
+					correctTypoInPartialWord: false,
+					maxNumberOfPredictions: 20
+				}),
+			});
+
+			if (response.ok) {
+				console.log('response:', response)
+				let comps = await response.json();
+				comps = comps.predictions.map((p) => p.text);
+				comps = comps.sort().filter(onlyUnique);
+				console.log(comps);
+				return comps; // Resolve with the result
+			} else {
+				const message = `Error: ${response.status}`;
+				throw new Error(message); // Reject with an error
+			}
+		} catch (error) {
+			console.error("Error fetching completions:", error);
+			throw error; // Re-throw the error to be handled by the caller
+		}
+	}
+
 	async function getCompletions(term) {
 		try {
 			//validateToken('string');
 			let url = 'https://api.typewise.ai/latest/completion/complete';
-    		const proxyUrl = 'https://cors-anywhere.herokuapp.com/'; // CORS proxy URL
+    		//const proxyUrl = 'https://cors-anywhere.herokuapp.com/'; // CORS proxy URL
 			const response = await fetch(url, {
 				mode: "cors",
 				cache: "no-cache",
@@ -430,7 +464,7 @@
 		// find and sort the phrases in the personal library starting with the search term
 		startsWith = $phrases
 			.filter((phrase) => phrase.toLowerCase().startsWith(searchKey))
-			.filter(onlyUnique)
+			.filter(onlyUnique).filter((phrase) => phrase); //makes sure only unique phrases and the phrase is not empty
 		if (currCategory) {
 			startsWith =startsWith.filter((phrase) => $categoryWritable.get(currCategory).has(phrase));
 		}

@@ -431,25 +431,6 @@ export function addPhraseWithTag(tagPhrase) {
     const formattedObject = getTagsAndFormatPhrase(tagPhrase);
     const tags = formattedObject[0];
     const formattedPhrase = formattedObject[1];
-    /*const phraseWords = tagPhrase.split(' ');
-    let formattedPhraseArr = [];
-    let tags = [];
-    let endTagged = true;
-    console.log(tagPhrase);
-    for (let i = phraseWords.length - 1; i >= 0; i--) {
-        if (phraseWords[i].length > 0 && phraseWords[i].charAt(0) === '#' && endTagged) { //make sure word exists
-            tags.unshift(phraseWords[i]); // maybe push to improve performance (but reverse order)
-        } else if (phraseWords[i].length > 0 && phraseWords[i].charAt(0) === '#') {
-            tags.unshift(phraseWords[i]);
-            formattedPhraseArr.unshift(phraseWords[i].substring(1));
-        } else {
-            endTagged = false;
-            formattedPhraseArr.unshift(phraseWords[i]);
-        }
-    }
-    const formattedPhrase = formattedPhraseArr.join(' ');*/
-    console.log('tags', tags);
-    console.log('format', formattedPhrase);
     addTagsToDB(tags);
     const metaDataObj = {category: customPhraseName, tags: tags};
     addPhrase(formattedPhrase, metaDataObj);
@@ -622,11 +603,8 @@ export async function undoAddPhrase() {
     } catch (error) {
         console.error("Transaction error:", error);
     }
-    console.log('1bro', await getAllOfStore(timeStampStore));
     await timeStampStore.delete(lastTimeStampKey);
-    console.log('2bro', await getAllOfStore(timeStampStore));
     lastTimeStampKey = null;
-    console.log('phrases2', await getAllOfStore(phraseStore));
     updatePhrasesfromDB();
 }
 
