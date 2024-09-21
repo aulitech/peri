@@ -31,6 +31,7 @@
 	"dependencies": {
 		"glove": "^0.1.0",
 		"jszip": "^3.10.1",
-		"n-gram": "^2.0.2"
+		"n-gram": "^2.0.2",
+		"openai": "^4.62.1"
 	}
 }

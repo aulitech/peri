@@ -460,7 +460,6 @@
 	$: {
 		// look in personal library
 		searchKey = searchTerm.toLowerCase();
-		//console.log('search', searchKey);
 		// find and sort the phrases in the personal library starting with the search term
 		startsWith = $phrases
 			.filter((phrase) => phrase.toLowerCase().startsWith(searchKey))
@@ -480,7 +479,6 @@
 		keylength = searchKey.length;
 		completions = startsWith.map((phrase) => phrase.slice(keylength));
 
-		//
 		searchKey = searchKey.trim();
 		contains =
 			searchKey.length < 3 // don't bother With Meaningless Matches
@@ -537,7 +535,6 @@
 	}
 
 	async function fetchAndAddCompletions(searchTerm) {
-		console.log('start3', starters);
         if (starters.length < 2) {
 			const termArr = searchTerm.split(' ');
 			const lastWord = termArr[termArr.length - 1];
