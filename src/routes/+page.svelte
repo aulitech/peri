@@ -301,7 +301,8 @@
 	}
 
 	// not easy to localize
-	const kbd = [...Array(26)].map((_, i) => String.fromCharCode('a'.charCodeAt(0) + i));
+	let kbd = [...Array(26)].map((_, i) => String.fromCharCode('a'.charCodeAt(0) + i));
+	kbd.unshift('#');
 
 	const fs = {
 		display:
