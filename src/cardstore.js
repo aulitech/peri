@@ -291,14 +291,17 @@ async function populateTagsFromDB() {
 }
 
 export async function setDefaultPhrases() {
-    const transaction = db.transaction(["phrases", "timeStamps", "addedPhrases"], "readwrite");
+    const transaction = db.transaction(["phrases", "timeStamps", "addedPhrases", "tags"], "readwrite");
     const phraseStore = transaction.objectStore("phrases");
     const timeStampStore = transaction.objectStore("timeStamps");
     const addedStore = transaction.objectStore("addedPhrases");
+    const tagStore = transaction.objectStore("tags");
     try {
         await timeStampStore.clear();
         await phraseStore.clear(); // Clear the existing object store
         await addedStore.clear();
+        await tagStore.clear();
+        tagMap = new Map();
         console.log("Object store cleared");
 
         // Add default phrases with frequencies
